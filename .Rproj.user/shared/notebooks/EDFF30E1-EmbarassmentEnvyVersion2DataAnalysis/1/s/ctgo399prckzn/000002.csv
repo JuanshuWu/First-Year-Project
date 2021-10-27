@@ -1,0 +1,6 @@
+"0","#Create binary variable for attention 2 error  and attention 1 error "
+"0","Dat <- Dat %>% mutate(attention.1.error = if_else(Attention.1 == 13, ""AC1 Correct"" , ""AC1 Incorrect""))"
+"2","Error: Problem with `mutate()` input `attention.1.error`.
+[31mx[39m object 'Attention.1' not found
+[34mi[39m Input `attention.1.error` is `if_else(Attention.1 == 13, ""AC1 Correct"", ""AC1 Incorrect"")`.
+"

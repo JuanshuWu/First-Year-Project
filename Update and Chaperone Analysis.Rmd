@@ -1,0 +1,228 @@
+---
+title: "Embarassment Analysis Update/Chaperone Analysis"
+author: "Juanshu Wu"
+date: "5/16/2021"
+output: html_document
+---
+#Data Wrangling
+```{r,warning = FALSE, message = FALSE}
+library(tidyverse)
+Dat <- read.csv("Prolific-500participants-Numeric.csv",TRUE)
+Dat1 <- Dat %>% filter(Consent == "1") 
+STRANGE <- Dat1 %>% filter(is.na(Attention1))
+#Delete the participants' data that fail the attention checks
+Dat_attention_check_passed <- Dat1 %>% filter(Attention1 == 1)
+Dat_attention_check_failed <- Dat1 %>% filter(Attention1 != 1)
+type_gender_know <- Dat_attention_check_passed %>% select(Gender, Prolific.ID, starts_with(c("Body","Judgment")))
+#type_gender_know <- 
+  #type_gender_know %>% 
+ # rename(Body.Naked_1 = Body.Naked._1, Body.Naked_2 = Body.Naked._2)
+test <- type_gender_know %>% select(Gender, Body.Bowel_1, Body.Bowel_2)
+
+test %>% pivot_longer(cols=c(Body.Bowel_1, Body.Bowel_2), names_to = "doctor_type", values_to = "scores", names_prefix="Body.Bowel_")
+
+repeated_ready1 <- 
+type_gender_know %>% 
+  pivot_longer(cols = starts_with(c("Judgment", "Body")), 
+                 values_to = "scores", 
+                 names_to = (c("Type", "Sub", "Doctor")),
+               names_pattern = c("(.*)\\.(.*)_(.)"))
+```
+#1.was this physician you'd seen before-> did you misrepresent...?
+```{r,warning = FALSE, message = FALSE}
+
+DataA1 <- Dat_attention_check_passed %>% filter(Mispresent != 3 & Physician.Previous != 3)
+DataA1$Mispresent = recode_factor(DataA1$Mispresent, "1" = "Misrepresent-Yes","2" = "Misrepresent-NO")
+DataA1$Physician.Previous = recode_factor(DataA1$Physician.Previous, "1" = "PreviousSeenPhysician-Yes","2" = "PreviousSeenPhysician-No")
+table(DataA1$Physician.Previous,DataA1$Mispresent)
+chisq.test(DataA1$Physician.Previous,DataA1$Mispresent)
+```
+
+Whether the physician is someone the participant had seen before does not significantly predict people misrepresent unfavorable information: Chisq(1) = 0.81957,p-value = 0.3653
+
+#2.Gender-PT (patient) X gender-doc -> how much embar or awkwardness...?
+
+```{r,warning = FALSE, message = FALSE}
+DataA2 <- Dat_attention_check_passed %>% filter(Physician.Gender != 3)
+DataA2$Gender = recode_factor(DataA2$Gender, "1"= "Male","2" = "Female")
+DataA2$Physician.Gender= recode_factor(DataA2$Physician.Gender, "1" = "Male", "2" = "Female")
+
+A2.1 <- lm(BodilyEmbarrassment~ Physician.Gender+Gender, data = DataA2 )
+A2.2<- lm(BodilyEmbarrassment ~ Physician.Gender+Gender+Physician.Gender:Gender,data = DataA2)
+summary(A2.1)
+anova(A2.1)
+anova(A2.1,A2.2)
+
+
+
+
+  Male <- DataA2 %>% filter(Gender == "Male")
+  Female <- DataA2%>% filter(Gender == "Female")
+
+```
+
+```{r,warning = FALSE, message = FALSE}
+DataA2 %>% ggplot() +
+aes(x = Physician.Gender, color = Gender, group = Gender, y = BodilyEmbarrassment) +
+stat_summary(fun.y = mean, geom = "point") +
+stat_summary(fun.y = mean, geom = "line")+
+labs(y = "Embarrassment Rating", x = "Gender of Physician")+
+theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+ggtitle(" Patient-Gender/Physician-Gender on the examination embarassment")+
+stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+scale_y_continuous(limits = c(1, 7))
+
+
+DataA2Female<- DataA2 %>% filter(Gender == "Female")
+
+DataA2Male<- DataA2%>% filter(Gender == "Male")
+  hist(DataA2Female$BodilyEmbarrassment,main = "Female Embarassment rating histogram")
+  hist(DataA2Male$BodilyEmbarrassment,main = "Male Embarassment rating histogram")
+  
+  
+  
+
+
+```
+
+
+
+
+#Distribution of embarassment score across gender
+```{r,warning = FALSE, message = FALSE}
+  
+Dat1$Gender = recode_factor(Dat1$Gender, "1" = "Male","2" = "Female")
+  
+
+Dat1$BodilyEmbarrassment = recode_factor(Dat1$BodilyEmbarrassment, "1" ="1" ,"2" = "2","4" = "3","5" = "4","6" =" 5","7" = "6","8" = "7"
+Dat1$BodilyEmbarrassment = as.numeric(Dat1$BodilyEmbarrassment)
+ggplot(data = Dat1, stat="count", aes(x = BodilyEmbarrassment))+ geom_histogram()+
+facet_wrap(~Gender)+theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+ggtitle(" Distribution  of embarassment score across Gender")
+)
+
+```
+
+Adding the interaction of the Gender-PT (patient) X gender-doc  does not significanly improves the model or in other words does not explain more variance regarding how much embar or awkwardness of the private test: F(1,145)= 0.0497, p = 0.8239.
+There is a main effect Participant's Gender on reported embarassment : F(1,146)= 4.13,p = 0.044 ;but there is no main effect of Physicain Gender on reported embarassment: F(1,146)= 0.07, p = 0.79
+
+
+
+#3.Gender-PT X gender-doc -> were your private parts examined.
+```{r,warning = FALSE, message = FALSE}
+library(tidyverse)
+DataA3 <- Dat_attention_check_passed %>% filter(Physician.Gender != 3 & ExaminePrivate != 3)
+DataA3$ExaminePrivate = recode_factor(DataA3$ExaminePrivate, "1" = "1","2" = "0")
+DataA3$Gender = recode_factor(DataA3$Gender, "1"= "Male","2" = "Female")
+DataA3$Physician.Gender= recode_factor(DataA3$Physician.Gender, "1" = "Male", "2" = "Female")
+A3.1<- glm(formula = ExaminePrivate~ Physician.Gender+Gender, family = "binomial",data = DataA3)
+A3.2 <- glm(formula = ExaminePrivate~ Physician.Gender*Gender, family = "binomial",data = DataA3)
+summary(A3.1)
+#Model Comparison
+anova(A3.1,A3.2,test = "Chisq")
+
+
+```
+
+```{r,warning = FALSE, message = FALSE}
+DataA3$ExaminePrivate = as.numeric(DataA3$ExaminePrivate)
+
+Pivot1 = DataA3 %>%group_by(Physician.Gender,Gender) %>% summarise(ExaminePrivateRate = mean(ExaminePrivate)-1)
+
+
+
+Pivot1%>% ggplot()+aes(x= Physician.Gender,group =Gender,color = Gender,y= ExaminePrivateRate)+
+geom_point()+
+geom_line()+
+theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+ggtitle("Gender Participant/Physician on Rate of Examine Private Part")
+```
+There is a significant interaction of Physician.Gender and Participant Gender in predicting whether the private part is examined. Chisq(1,385) =  7.28, p = 0.006
+
+
+#4.Gender-pt X gender-doc -> chaperone present
+```{r,warning = FALSE, message = FALSE}
+DataA4 <- Dat_attention_check_passed %>% filter(Physician.Gender != 3 & ExaminePrivate != 3 &Chaperone.Presence != 5)
+DataA4$Gender = recode_factor(DataA4$Gender, "1"= "Male","2" = "Female")
+DataA4$Physician.Gender= recode_factor(DataA4$Physician.Gender, "1" = "Male", "2" = "Female")
+DataA4$Chaperone.Presence = recode_factor(DataA4$Chaperone.Presence, "1" = "0", "2" = "1", "4" = "1")
+
+A4.1<- glm(formula = Chaperone.Presence~ Physician.Gender+Gender, family = "binomial",data = DataA4)
+A4.2 <- glm(formula = Chaperone.Presence~ Physician.Gender*Gender, family = "binomial",data = DataA4)
+
+summary(A4.1)
+#Model Comparison
+anova(A4.1,A4.2,test = "Chisq")
+
+```
+
+```{r,warning = FALSE, message = FALSE}
+DataA4$Chaperone.Presence = as.numeric(DataA4$Chaperone.Presence)
+
+Pivot2 = DataA4 %>%group_by(Physician.Gender,Gender) %>% summarise(ChaperonePresentRate = mean(Chaperone.Presence)-1)
+
+Pivot2%>% ggplot()+aes(x= Physician.Gender,group =Gender,color = Gender,y= ChaperonePresentRate)+
+geom_point()+
+geom_line()+
+theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+ggtitle("Gender Participant/Physician on Rate of ChaperonePresentRate")
+
+
+```
+There is NO significant interaction of Physician.Gender and Participant Gender in predicting whether the Chaperone is present. Chisq(1,377) = 2.598, p = 0.11
+
+There is significant effect of Gender in predicting whether the Chaperone is present.Specifically, if the participant gender is Female, it will increase the log odd of the rate of Chaperone present by adding 1.3
+
+
+#5.Distribution of DV responses on "What is your attitude... chaperone...? on Female and Male separately"
+```{r,warning = FALSE, message = FALSE}
+DataA5 <- Dat_attention_check_passed %>% filter(Chaperone.Attitude!= "NA")
+DataA5$Gender = recode_factor(DataA5$Gender, "1"= " Male", "2" = "Female" )
+DataA5$Chaperone.Attitude = recode_factor(DataA5$Chaperone.Attitude, "1" = " No", "2" = "Slightly_No", "3" = "Yes_F", "4" = "Yes_M", "5" = "Yes" , "6" = "Yes", "7" = "NoPreference")
+
+library(ggplot2)
+library(dplyr)
+data <- DataA5%>% 
+    group_by(Chaperone.Attitude,Gender) %>% 
+    summarise(count = n())
+
+data %>% 
+    ggplot(aes(x = Chaperone.Attitude, y = count)) +
+    geom_col()+labs(x = "Chaperone Preference Attitude")+ggtitle("Chaperone Preference distribution" )+
+     facet_wrap(~Gender)+theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+ggtitle("Do you prefer a Chaperone?")
+
+```
+
+#6.Gender-pt -> gender of chaperone present
+```{r,warning = FALSE, message = FALSE}
+DataA6 <- Dat_attention_check_passed %>% filter(Chaperone.Presence!= 1 &Chaperone.Presence!= 5)
+DataA6$Chaperone.Present.Gender = recode_factor(DataA6$Chaperone.Presence, "2" = "Chaperone -Female", "4" = "Chaperone-Male")
+DataA6$Gender = recode_factor(DataA6$Gender, "1" = "Participant-Male", "2" = "Participant-Female")
+
+table(DataA6$Chaperone.Present.Gender,DataA6$Gender)
+
+chisq.test(DataA6$Physician.Previous,DataA6$Gender)
+
+
+
+```
+The Participant Gender did not significantly predict the Gender of chaperone present.X-squared (1)= 0.039, p-value = 0.84 
+
+
+#7.Gender-pt -> chaperone was present
+```{r,warning = FALSE, message = FALSE}
+
+DataA7 <- Dat_attention_check_passed %>% filter(ExaminePrivate != 3 &Chaperone.Presence != 5)
+DataA7$Gender = recode_factor(DataA7$Gender, "1"= "Male","2" = "Female")
+DataA7$Chaperone.Presence = recode_factor(DataA7$Chaperone.Presence, "1" = "NO Chaperone", "2" = "Chaperone Present", "4" = "Chaperone Present")
+
+table(DataA7$Chaperone.Presence,DataA7$Gender)
+chisq.test(DataA7$Chaperone.Presence,DataA7$Gender)
+```
+
+The Participant Gender significantly predict the Prescence of chaperone.X-squared (1)= 15.6, p-value <= 0.01
+
+
+
+

@@ -1,0 +1,4 @@
+"0","plot(fitted(model1),residuals(model1))
+"
+"2","Error in plot.window(...) : need finite 'xlim' values
+"

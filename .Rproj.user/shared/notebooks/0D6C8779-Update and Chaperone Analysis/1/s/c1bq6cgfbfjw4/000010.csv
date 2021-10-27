@@ -1,0 +1,6 @@
+"0","Dat <- read.csv(""Prolific-500participants-Numeric.csv"",TRUE)
+"
+"2","Error: unexpected symbol in:
+""Dat1$BodilyEmbarrassment = recode_factor(Dat1$BodilyEmbarrassment, ""1"" =""1"" ,""2"" = ""2"",""4"" = ""3"",""5"" = ""4"",""6"" ="" 5"",""7"" = ""6"",""8"" = ""7""
+Dat""
+"

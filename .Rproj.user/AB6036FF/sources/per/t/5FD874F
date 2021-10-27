@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1613485531487.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1370104331",
+    "id" : "5FD874F",
+    "lastKnownWriteTime" : 1603584853,
+    "last_content_update" : 1603584853,
+    "path" : "C:/CoralloReplication1/JuanshuDataAnalysis.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "466,138",
+        "scrollLine" : "457"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

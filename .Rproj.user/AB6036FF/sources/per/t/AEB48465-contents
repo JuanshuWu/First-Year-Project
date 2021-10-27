@@ -1,0 +1,349 @@
+
+ library(tidyverse)
+ library(ggplot2)
+
+data1  <- read.csv("Embarrassment and Envy Study.csv", TRUE)               
+
+glimpse(data1)
+                  
+data1$Envy1 <-  recode_factor(data1$Envy1, "Strongly Dislike" = "1", "Dislike" = "2", 
+"Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+data1$Envy2 <-  recode_factor(data1$Envy2, "Strongly Dislike" = "1", "Dislike" = "2", 
+                              "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+data1$Envy3 <-  recode_factor(data1$Envy3, "Strongly Dislike" = "1", "Dislike" = "2", 
+                              "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+data1$Envy4 <-  recode_factor(data1$Envy4, "Strongly Dislike" = "1", "Dislike" = "2", 
+                              "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+data1$Envy5 <-  recode_factor(data1$Envy5, "Strongly Dislike" = "1", "Dislike" = "2", 
+                              "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+
+data1$Envy6<-  recode_factor(data1$Envy1, "Strongly Dislike" = "1", "Dislike" = "2", 
+                              "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+
+data1$Envy7 <-  recode_factor(data1$Envy1, "Strongly Dislike" = "1", "Dislike" = "2", 
+                              "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+data1$Envy8 <-  recode_factor(data1$Envy1, "Strongly Dislike" = "1", "Dislike" = "2", 
+                              "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+data1$General.Enjoy.Envied <-  recode_factor(data1$General.Enjoy.Envied, "Strongly dislike" = "1", "Dislike" = "2", 
+                           
+                           "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "like" = "6", "Strongly like" = "7")  
+
+
+
+data1$B1<-  recode_factor(data1$B1, "Strongly Dislike" = "1", "Dislike" = "2", 
+                                             
+                                             "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+data1$B2<-  recode_factor(data1$B2, "Strongly Dislike" = "1", "Dislike" = "2", 
+                                             
+                                             "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+data1$B3<-  recode_factor(data1$B3,"Strongly Dislike" = "1", "Dislike" = "2", 
+                                             
+                                             "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+data1$B4<-  recode_factor(data1$B4, "Strongly Dislike" = "1", "Dislike" = "2", 
+                                             
+                                             "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+
+data1$M1<-  recode_factor(data1$M1, "Strongly Dislike" = "1", "Dislike" = "2", 
+                                             
+                                             "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+data1$M2<-  recode_factor(data1$M2, "Strongly Dislike" = "1", "Dislike" = "2", 
+                                             
+                                             "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+data1$M3<- as.numeric(data1$M3)
+
+data1$M4<-  recode_factor(data1$M4, "Strongly Dislike" = "1", "Dislike" = "2", 
+                                             
+                                             "Somewhat dislike" ="3", "Neither like nor dislike" = " 4" ,"Somewhat like" = "5", "Like" = "6", "Strongly like" = "7")  
+
+
+
+
+
+
+data1$Envy1 <- as.numeric(data1$Envy1)
+data1$Envy2 <- as.numeric(data1$Envy2)
+data1$Envy3 <- as.numeric(data1$Envy3)                 
+data1$Envy4 <- as.numeric(data1$Envy4)                  
+data1$Envy5 <- as.numeric(data1$Envy5)                  
+data1$Envy6 <- as.numeric(data1$Envy6)                  
+data1$Envy7 <- as.numeric(data1$Envy7)                  
+data1$Envy8 <- as.numeric(data1$Envy8) 
+
+
+
+data1$B1<- as.numeric(data1$B1)
+data1$M1 <- as.numeric(data1$M1)                  
+data1$B2 <- as.numeric(data1$B2)                  
+data1$B3 <- as.numeric(data1$B3)                  
+data1$M3 <- as.numeric(data1$M3)          
+data1$B4<- as.numeric(data1$B4)
+data1$M4<- as.numeric(data1$M4)
+data1$B5 <- as.numeric(data1$B5)
+data1$M5 <- as.numeric(data1$M5)
+data1$M2 <- as.numeric(data1$M2)
+
+#data1$Personal.Achievement<- as.numeric(data1$Personal.Achievement)
+#data1$Physical.Attractive <- as.numeric(data1$Physical.Attractive)
+#data1$Academic.Achievement <- as.numeric(data1$Academic.Achievement)
+#Calculate mean envy score
+
+
+data2  <- read.csv("Embarrassment and Envy Study2.csv", TRUE) 
+data2 <- data2 %>% mutate(envy = (Envy1+Envy2+Envy3+Envy4+Envy5+Envy6+Envy7+Envy8)/8)
+
+###Plot General enjoyment of being envied as function of Envy Score
+
+ggplot(data2, aes(x= envy, y = General.Enjoy.Envied))+
+  geom_jitter()+
+  geom_smooth(method = lm)+ 
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+              ggtitle("General enjoyment of being envied/Disp Envy Score")+
+      
+     
+#check coorelation 
+cor.test(data2$envy,data2$General.Enjoy.Envied)
+
+
+#Calculate benign envy score
+data2 <- data2 %>% mutate(Benvy = ((B1+B2+B3+B4)/4))
+
+###Plot General enjoyment of being envied as function of Envy Score
+
+
+ggplot(data1, aes(x= Benvy, y = General.Enjoy.Envied))+
+  geom_jitter()+
+  labs(y = "General.Enjoy.Envied", x = "mean Envy")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))
+#check coorelation 
+cor.test(data1$envy,data1$General.Enjoy.Envied)
+#Calculate malicious envy score
+data2 <- data2 %>% mutate(Menvy = (M1+M2+M3+M4)/4)
+
+### Benign Envy
+
+ggplot(data2, aes(x= Benvy, y = General.Enjoy.Envied))+
+  geom_jitter()+
+  geom_smooth(method = lm)+
+  labs(y = "General.Enjoy.Envied", x = "Benign Envy")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+        ggtitle("General enjoyment of being envied/Benign Envy")
+#Benign Envy-general envy  Correlation
+
+cor.test(data2$Benvy,data2$General.Enjoy.Envied)
+
+
+ggplot(data2, aes(x=Menvy, y = General.Enjoy.Envied))+
+  geom_jitter()+
+  geom_smooth(method = lm)+
+  labs(y = "General.Enjoy.Envied", x = "Malicious Envy")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+           ggtitle("General enjoyment of being envied/Malicious Envy")
+
+cor.test(data2$Menvy,data2$General.Enjoy.Envied)
+
+#Malicious Envy-general envy Correlation
+
+cor.test(data2$Menvy,data2$General.Enjoy.Envied)
+
+#envy scenarios Correlation
+data2 <- data2 %>% mutate(Being_Envy_Scenario = (Personal.Achievement+Physical.Attractive+Academic.Achievement+Popularity)/4)
+
+cor.test(data2$envy, data2$Being_Envy_Scenario)
+
+
+#Envy and being envied scenario graph
+ggplot(data2, aes(x=envy, y = Being_Envy_Scenario))+
+       geom_jitter()+
+    geom_smooth(method = lm)+
+  labs(y = "Enjoyment of being envied Scenario ", x = "mean Envy")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+         ggtitle("Enjoyment of being envied Scenario/Disp Envy")
+
+cor.test(data2$envy, data2$Being_Envy_Scenario)
+
+
+
+
+unique(data2$envied.relationship)
+
+type_gender_know <- 
+data2 %>% select(Gender, ResponseId, starts_with(c("Body", "Judgement")))
+
+type_gender_know <- 
+  type_gender_know %>% 
+  rename(Body.Naked_1 = Body.Naked._1, Body.Naked_2 = Body.Naked._2)
+
+
+test <- type_gender_know %>% 
+  select(Gender, Body.Bowel_1, Body.Bowel_2)
+
+test %>% pivot_longer(cols=c(Body.Bowel_1, Body.Bowel_2), names_to = "doctor_type", values_to = "scores", names_prefix="Body.Bowel_")
+
+repeated_ready <- 
+type_gender_know %>% 
+  pivot_longer(cols = starts_with(c("Judgement", "Body")), 
+                 values_to = "scores", 
+                 names_to = (c("Type", "Sub", "Doctor")),
+                 names_pattern = c("(.*)\\.(.*)_(.)"))
+
+
+##Interaction plot 
+
+repeated_ready$Doctor <- recode_factor(repeated_ready$Doctor,"1" = "Not Know", "2" = "Know")
+
+
+# Doctor and Type or Embarassment on Rating
+repeated_ready%>% 
+  ggplot() +
+  aes(x = Doctor, color = Type, group = Type, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+          ggtitle("Doctor and Type of Embarassment on Rating")+
+          stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)
+          
+
+
+
+
+
+
+# Doctor and SubType or Embarassment on Rating
+repeated_ready
+
+repeated_ready%>% 
+  ggplot() +
+  aes(x = Doctor, color = Sub, group = Sub, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+  ggtitle("Doctor and SubType of Embarassment on Rating")+
+  stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+   facet_wrap(.~Type)
+
+
+
+
+#Doctor and Gender on Embarassment Rating
+
+repeated_ready$Gender <- as.factor(repeated_ready$Gender)
+
+repeated_ready$Gender <- recode_factor(repeated_ready$Gender, "1" = "Male","2" = "Female")
+
+ repeated_ready %>% ggplot() +
+  aes(x = Doctor, color = Gender, group = Gender, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+   stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+  ggtitle("Doctor and Gender on Embarassment Rating")
+ 
+ 
+ 
+ 
+
+#Doctor and Gender on Embarassment Rating
+ 
+ repeated_ready %>% ggplot() +
+   aes(x = Doctor, color = Gender, group = Gender, y = scores) +
+   stat_summary(fun.y = mean, geom = "point") +
+   stat_summary(fun.y = mean, geom = "line")+
+   labs(y = "Embarassment Rating")+
+   theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"))+
+   ggtitle("Doctor and Gender on Embarassment Rating")
+
+
+#Type and Gender
+ repeated_ready %>% ggplot() +
+   aes(x = Type, color = Gender, group = Gender, y = scores) +
+   stat_summary(fun.y = mean, geom = "point") +
+   stat_summary(fun.y = mean, geom = "line")+
+   labs(y = "Embarassment Rating")+
+   theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"))+ 
+   stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+   ggtitle("Type of embarassment and Gender on Rating")
+ 
+ 
+ #repeated measure
+ repeated_ready
+ 
+ model1<- aov(scores ~ Gender*Type*Doctor+Error(ResponseId/(Type*Doctor)), data = repeated_ready)
+ summary(model1)
+ 
+
+
+
+
+
+
+
+
+
+
+

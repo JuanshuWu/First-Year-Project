@@ -1,0 +1,15 @@
+"0","type_gender_know <- Dat_attention_check_passed %>% select(Gender, ResponseId, starts_with(c(""Body"",""Judgment"")))
+#type_gender_know <- 
+  #type_gender_know %>% 
+ # rename(Body.Naked_1 = Body.Naked._1, Body.Naked_2 = Body.Naked._2)
+test <- type_gender_know %>% select(Gender, Body.Bowel_1, Body.Bowel_2)
+
+test %>% pivot_longer(cols=c(Body.Bowel_1, Body.Bowel_2), names_to = ""doctor_type"", values_to = ""scores"", names_prefix=""Body.Bowel_"")
+"
+"0",""
+"0","repeated_ready <- "
+"0","type_gender_know %>% "
+"0","  pivot_longer(cols = starts_with(c(""Judgment"", ""Body"")), "
+"0","                 values_to = ""scores"", "
+"0","                 names_to = (c(""Type"", ""Sub"", ""Doctor"")),"
+"0","               names_pattern = c(""(.*)\\.(.*)_(.)""))"

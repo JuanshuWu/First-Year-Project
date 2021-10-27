@@ -1,0 +1,1 @@
+"0","model1<- aov(scores ~ Gender*Type*Doctor+Error(ResponseId/(Type*Doctor)), data = repeated_ready)"

@@ -1,0 +1,269 @@
+---
+title: "Embarassment Study Version 2 Analysis"
+Author: [Juanshu Wu]
+output:
+  html_document:
+    df_print: paged
+---
+
+#Load Data and calculating error rates on attention checks
+
+```{r,warning = FALSE, message = FALSE}
+library(tidyverse)
+#Load Data
+Dat <- read.csv("EmbarrassmentEnvyVersion2.csv", TRUE) 
+Dat %>% filter(Gender == 1) %>% nrow()
+
+#The percentage of people get wrong in Attention 1: correct answer coded value is 13.
+nrow(Dat %>% filter( Attention.1!= 13 ))/nrow(Dat)
+
+
+#The percentage of people get wrong in Attention 2( the math question) :correct answer coded value is 5.
+nrow(Dat %>% filter( Attention2!= 5))/nrow(Dat)
+
+
+#Percentage of people get wrong in both attention 1 and attention 2 :
+nrow(Dat %>% filter( Attention2!= 5&Attention.1!= 13 ))/nrow(Dat)
+
+
+#Percentage of people get wrong in attention 1 or attention 2 :
+nrow(Dat %>% filter( Attention2!=5 |Attention.1!= 13 ))/nrow(Dat)
+
+```
+The percentage of people get wrong in Attention 1: $9.25\%$
+The percentage of people get wrong in Attention 2: $2.5\%$
+Percentage of people get wrong in both attention 1 and attention 2:$0.5\%$
+Percentage of people get wrong in attention 1 or attention 2:$11.3\%$
+#Is failing attention 2 a predictor of failing attention 1? 
+```{r,warning = FALSE, message = FALSE}
+#Create binary variable for attention 2 error  and attention 1 error 
+Dat <- Dat %>% mutate(attention.1.error = if_else(Attention.1 == 13, "AC1 Correct" , "AC1 Incorrect"))
+Dat <- Dat %>% mutate(attention.2.error = if_else(Attention2 == 5, "AC2 Correct" , "AC2 Incorrect"))
+library(tidyverse)
+
+# Visualize a graph to see the dependence of attention 2 and attention 1 
+#ggplot(Dat %>% filter(!is.na(attention.1.error) & !is.na(attention.2.error)) ) +
+  #aes(x = attention.1.error, fill = attention.2.error) +
+  #geom_bar() +
+  #scale_fill_hue() +
+  #theme_minimal()+
+  #labs(x = "Attention 1 Check" , y = " Subject Count")+
+  #scale_fill_discrete(name = "Attention 2 Check")
+
+#Chi-Square table
+Dat1<- Dat %>% filter(!is.na(attention.1.error)&!is.na(attention.2.error))
+
+table(Dat1$attention.1.error,Dat1$attention.2.error)
+
+chisq.test(Dat$attention.1.error,Dat$attention.2.error)
+
+``` 
+The dependency of attention 1 check and attention 2 check is NOT significant 
+X^2 tests: X^2 (**1**) = **0.39**, p=**0.5341**  
+#Is Attention1/ Attention 2  a predictor of duration spent completing the study?       
+```{r,warning = FALSE, message = FALSE}
+
+#log transform the duration in seconds;
+
+anova(lm(log(Duration..in.seconds.) ~ attention.1.error, data =  Dat))
+
+anova(lm(log(Duration..in.seconds.) ~ attention.2.error, data =  Dat))
+
+
+``` 
+Attention 1 significantly predict log( Study Duration in secs): F(**1**,**386**) = **36.46**, p < **0.01**
+Attention 2 does NOT significantly predict log( Study Duration in secs): F(**1**,**383**) = **1.45**, p = **0.23**
+
+#Is sequential rating differences during dispositional envy scale a predictor of duration spent completing the study?    
+
+```{r,warning = FALSE, message = FALSE}
+
+#Calculate and mutate the column of sequential rating differences during dispositional envy scale:
+Dat2<- Dat %>% filter(!is.na(Envy1)) %>% mutate(sequential_difference = abs(Envy1-Envy2)+abs(Envy2 -  Envy3)+abs(Envy3-Envy4)+abs(Envy4-Envy5)+abs(Envy5-Envy6)+abs(Envy6-Envy7)+abs(Envy7-Envy8))
+
+#linear regression on sequential_difference predicting log transformed duration in seconds ;
+anova(lm(log(Duration..in.seconds.) ~ sequential_difference, data =  Dat2))
+
+#liner regression of attention 1 error predicting sequential difference. 
+anova(lm(sequential_difference ~attention.1.error, data = Dat2))
+``` 
+
+Sequential difference significantly predicts log transformed duration in seconds:F(**1**,**386**) = **3.94**, p = **0.048** 
+Sequential difference significantly predicts attention 1 error :F(**1**,**386**) = **9.51**, p < **0.01**
+#Data wrangling
+```{r,warning = FALSE, message = FALSE}
+#Delete the participants' data that fail the attention checks
+Dat_attention_check_passed <- Dat %>% filter(Attention.1 == 13 & Attention2 == 5)
+type_gender_know <- Dat_attention_check_passed %>% select(Gender, ResponseId, starts_with(c("Body", "Judgment")))
+
+#type_gender_know <- 
+  #type_gender_know %>% 
+ # rename(Body.Naked_1 = Body.Naked._1, Body.Naked_2 = Body.Naked._2)
+test <- type_gender_know %>% 
+  select(Gender, Body.Bowel_1, Body.Bowel_2)
+
+test %>% pivot_longer(cols=c(Body.Bowel_1, Body.Bowel_2), names_to = "doctor_type", values_to = "scores", names_prefix="Body.Bowel_")
+
+repeated_ready <- 
+type_gender_know %>% 
+  pivot_longer(cols = starts_with(c("Judgment", "Body")), 
+                 values_to = "scores", 
+                 names_to = (c("Type", "Sub", "Doctor")),
+               names_pattern = c("(.*)\\.(.*)_(.)"))
+```
+
+#Plots
+
+```{r,warning = FALSE, message = FALSE}
+# Doctor and Type or Embarrassment on Rating
+
+repeated_ready$Doctor <- as.factor(repeated_ready$Doctor)
+repeated_ready$Doctor <- recode_factor(repeated_ready$Doctor, "1" = "NOT Know","2" = "Know")
+
+repeated_ready%>% 
+  ggplot() +
+  aes(x = Doctor, color = Type, group = Type, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+          ggtitle("Doctor and Type of Embarassment on Rating")+
+          stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+           scale_y_continuous(limits = c(1, 7))
+ 
+```
+
+```{r,warning = FALSE, message = FALSE}
+#Doctor and Gender on Embarassment Rating
+
+repeated_ready$Gender <- as.factor(repeated_ready$Gender)
+repeated_ready$Gender <- recode_factor(repeated_ready$Gender, "1" = "Male","2" = "Female")
+
+ repeated_ready %>% ggplot() +
+  aes(x = Doctor, color = Gender, group = Gender, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+   stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+  ggtitle("Doctor and Gender on Embarassment Rating")+
+    scale_y_continuous(limits = c(1, 7))
+ 
+ 
+
+
+```
+
+```{r,warning = FALSE, message = FALSE}
+#Embarassment Type and Gender on Embarassment Rating
+
+ repeated_ready %>% ggplot() +
+   aes(x = Type, color = Gender, group = Gender, y = scores) +
+   stat_summary(fun.y = mean, geom = "point") +
+   stat_summary(fun.y = mean, geom = "line")+
+   labs(y = "Embarassment Rating")+
+   theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"))+ 
+   stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+   ggtitle("Type of embarassment and Gender on Rating")+
+   scale_y_continuous(limits = c(1, 7))
+ 
+ 
+ 
+
+```
+
+
+```{r,warning = FALSE, message = FALSE}
+# Doctor and SubTypes of Embarassment on Rating
+
+repeated_ready%>% 
+  ggplot() +
+  aes(x = Doctor, color = Sub, group = Sub, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+  ggtitle("Doctor and SubTypes of Embarassment on Rating")+
+  stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+   facet_wrap(.~Type)+
+   scale_y_continuous(limits = c(1, 7))
+ 
+```
+ 
+ 
+```{r,warning = FALSE, message = FALSE}
+
+ repeated_ready%>% 
+  ggplot() +
+  aes(x = Doctor, color = Type, group = Type, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+          ggtitle("Doctor/Gender/Type of Embarassment on Rating")+
+          stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+          facet_wrap(.~ Gender)+scale_y_continuous(limits = c(1, 7))
+ 
+ 
+``` 
+ 
+#Repeated Measure Full Model
+ 
+```{r,warning = FALSE, message = FALSE}
+model1<- aov(scores ~ Gender*Type*Doctor+Error(ResponseId/(Type*Doctor)), data = repeated_ready)
+summary(model1)
+plot(fitted(model1),residuals(model1))
+
+```
+Significant interaction of Doctor type and Embarrassment type: F(**1**,**339**) = **36.03**, p <**0.01**
+ 
+Significant interaction of Gender and Embarrassment type: F(**1**,**339**) = **4.78**, p = **0.03**
+ 
+Non-Significant interaction of Gender and Doctor type: F(**1**,**339**) = **0.006**, p = **0.94**
+
+Non-Significant  three-way interaction of Gender/Doctor type/Embarrassment type: F(**1**,**339**) = **3.15**, p = **0.077**
+ 
+Significant Main effect of Gender: F(**1**,**339**) = **16.22**, p < **0.01**
+ 
+Significant Main effect of Doctor type: F(**1**,**339**) = **7.7**, p < **0.01**
+ 
+Significant Main effect of Embarrassment type: F(**1**,**339**) = **7.15**, p = **0.011**
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

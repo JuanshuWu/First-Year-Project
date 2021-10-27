@@ -1,0 +1,182 @@
+#' # 201a Homework 2: data visualization
+#' ## INSTRUCTIONS     
+#' 1. Download the skeleton script `r link.skeleton()`.
+#' 2. Edit the script to create your plots (as detailed below).
+#' 3. Generate a PDF containing all the plots you create.
+#' 4. Send the script AND the PDF of the plots to Lauren Oey via direct message on Slack.
+#' ## Submission and Grading 
+#' Unlike most/all subsequent assignments, his assignment will NOT be graded automatically. Instead, you will send your filled-in script AND the 4 plots it produces to Lauren Oey via direct message on Slack. Your message should contain 2 files: (1) your script and (2) a single PDF containing all four figures **in order**. Please name the files `hw02-USERNAME.R` and `hw02-USERNAME.pdf`, where `USERNAME` is replaced with the login username you use for the homework site.
+#' The instructor will manually grade your plots based on the following criteria:
+#' 1. Accuracy and clarity: The plot should address all parts of the question, and it should be visually apparent what (non-)relationship(s) the plot is attempting to convey, and, if present, what those relationships are.
+#' 2. Publication-worthiness: We will be looking for clear and expressive titles of both the plot and the axes, informative legends, consistency of style across plots, presence of errorbars where appropriate. (This is admittedly somewhat subjective, so as long as your plots do not obviously violate any of these, you will be fine.)
+#' 3. Each problem is worth an equal number of points out of a total possible 100. As with the auto-graded assignments, you should iteratively improve your plots until you are confident that each one satisfies the requirements.
+#' 4. Use ggplot for all problems.
+#' **Problems 1 - 3 deal with the Cal1020 Race Data, loaded below.** 
+#'   
+#' ## Problem 1
+#' Create a plot illustrating the distribution of runners' age in the race.
+ggplot(cal1020, aes(x=age)) + 
+  geom_histogram(color="black", fill="lightblue", bins = 25)+ 
+  geom_density(aes(y = ..count..),alpha = 0.5)+
+  theme(plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 13), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black")
+        )+
+  ggtitle("Distirbution of Runner Age")
+
+
+#' ## Problem 2
+#' How does pace vary by Age and Corral?
+#' Create an easily interpretable plot that visualizes this relationship.In this plot, label a single point representing Ed Vul's pace (this is best done by adding a geom that uses its own data frame containing only Ed's data).
+
+
+EdVul <- cal1020 %>% filter(name.last == "Vul")
+
+ggplot(cal1020, aes(y= pace.min,x = age))+
+ geom_point(color = "lightblue4",alpha = 0.5)+
+  geom_point(data = EdVul,aes(x = age, y = pace.min),size = 2,color = "red",fill="red")+
+  geom_smooth(method = lm)+
+  facet_grid(.~corral)+
+  geom_text(data = EdVul,size = 2.5,
+            x = 40,
+            y = 15,
+            label = "EdVul")+
+  geom_curve(data = EdVul,
+             x = 40,
+             xend = EdVul$age,
+             y = 15,
+             yend = EdVul$pace.min,
+             curvature = 0.1,
+             color = "red")+
+  theme(plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 13), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))+
+  ggtitle("Pace vary by age and correl Graph")
+
+
+##################
+#' 
+#' ## Problem 3
+#' How does the distribution of male and female speed vary as a function of corral?
+#' Create a plot that addresses this question.
+
+ ggplot(cal1020,aes(y = speed.mph, x = as.factor(corral)))+
+  geom_violin(fill= "lightblue")+
+  stat_summary(fun="mean")+
+  facet_wrap(~sex,nrow = 2)+
+theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 13), 
+      panel.grid.major = element_blank(), 
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(), 
+      axis.line = element_line(colour = "black"))+
+  xlab("corral")+
+  ggtitle("male/female speed by corral")
+      
+
+#' ## Problem 4
+#' Using the built-in `iris` dataset, create a three-panel plot visualizing the relationship between Petal Width and Petal Length for the three species.
+
+
+ggplot(iris, aes(x= Petal.Length, y =Petal.Width))+
+  geom_point()+
+  geom_smooth(method = lm)+
+  facet_wrap(~Species)+
+ theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+  ggtitle("Petal Width and Petal Length/Species")
+
+
+
+
+
+library(tidyverse) # loads the tidyverse package, which includes ggplot2
+load(url('https://vulstats.ucsd.edu/data/cal1020.cleaned.Rdata')) # loads your data from the vulstats server
+
+
+
+plot1 =ggplot(cal1020, aes(x=age)) + 
+  geom_histogram(color="black", fill="lightblue", bins = 25)+ 
+  geom_density(aes(y = ..count..),alpha = 0.5)+
+  theme(plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 13), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black")
+  )+
+  ggtitle("Distirbution of Runner Age")
+
+
+
+  
+  
+  
+plot2 =ggplot(cal1020, aes(y= pace.min,x = age))+
+  geom_point(color = "lightblue4",alpha = 0.5)+
+  geom_point(data = EdVul,aes(x = age, y = pace.min),size = 2,color = "red",fill="red")+
+  geom_smooth(method = lm)+
+  facet_grid(.~corral)+
+  geom_text(data = EdVul,size = 2.5,
+            x = 40,
+            y = 15,
+            label = "EdVul")+
+  geom_curve(data = EdVul,
+             x = 40,
+             xend = EdVul$age,
+             y = 15,
+             yend = EdVul$pace.min,
+             curvature = 0.1,
+             color = "red")+
+  theme(plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 13), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))+
+  ggtitle("Pace vary by age and correl Graph")
+plot3 = ggplot(cal1020,aes(y = speed.mph, x = as.factor(corral)))+
+  geom_violin(fill= "lightblue")+
+  stat_summary(fun="mean")+
+  facet_wrap(~sex,nrow = 2)+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 13), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+  xlab("corral")+
+  ggtitle("male/female speed by corral") 
+
+
+
+
+plot4 = ggplot(iris, aes(x= Petal.Length, y =Petal.Width))+
+  geom_point()+
+  geom_smooth(method = lm)+
+  facet_wrap(~Species)+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+  ggtitle("Petal Width and Petal Length/Species")
+
+
+
+  
+  pdf('hw02-JuanshuWu.pdf', 9, 6)
+  plot1
+  
+  plot2
+  
+  plot3
+  
+  plot4
+  
+  
+dev.off()
+

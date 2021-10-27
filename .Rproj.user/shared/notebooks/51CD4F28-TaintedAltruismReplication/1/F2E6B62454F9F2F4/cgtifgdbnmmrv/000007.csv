@@ -1,0 +1,5 @@
+"0","#install.packages(""umx"")
+library(umx)
+"
+"2","Error: package ‘OpenMx’ could not be loaded
+"

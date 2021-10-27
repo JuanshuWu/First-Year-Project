@@ -1,0 +1,5 @@
+"0","#transfer the character into numeric answers"
+"0","selected<-Dat_attention_check_passed %>% select(starts_with(""Questions..""))"
+"2","Error in select(., starts_with(""Questions.."")) : 
+  unused argument (starts_with(""Questions..""))
+"

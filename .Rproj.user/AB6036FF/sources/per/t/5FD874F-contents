@@ -1,0 +1,580 @@
+
+############################################################
+file_ls <- list.files("./PracticeTrials/")
+setwd("./PracticeTrials/")
+Practice_result <- lapply(file_ls, read.csv)
+setwd("..")
+Practice_data_combined <- do.call("rbind", Practice_result)
+library(tidyverse)
+cp <- seq(1,100*100, 100)
+id_list = vector("integer")
+id = 0
+for(i in seq(1,100*100)){
+  if(i %in% cp){
+    id = id + 1
+  }
+  id_list[i] <- id
+}
+
+Practice_data_combined <- 
+  Practice_data_combined  %>% 
+  mutate(id = id_list)
+
+RTIRT=nullfile()
+DF1 = nullfile()
+d1<- split (Practice_data_combined, rep(1:100, each=100))
+for (i in 1:100) {
+  DF1[i] <- cor(d1[[i]]$duration,d1[[i]]$estimate) }
+RTIRT<- data.frame("Subjects" = 1:100, "Correlation" = DF1)
+
+ggplot(RTIRT,aes(x = as.numeric(Correlation)))+
+geom_histogram(color="black", fill="lightblue", bins = 25)+
+xlab("Correlation")+
+theme_bw() + 
+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
+ggtitle("Study1 Practice: Correlation of Duration and Estimate")
+
+
+
+
+hist(as.numeric(as.character(RTIRT$Correlation)),breaks=10,xlim=c(0.5,1.0),col="lightblue",xlab = "correlation", ylab = "count" ,main = paste("Study 1 Practice :" , "correlation of RT and IRT "))
+
+ ?hist()
+################################################################################################
+file_ls <- list.files("./MainExperiment/")
+setwd("./MainExperiment/")
+result<- lapply(file_ls, read.csv)
+Maindata_combined <- do.call("rbind", result)
+library(tidyverse)
+cp <- seq(1,160*100, 160)
+id_list = vector("integer")
+id = 0
+for(i in seq(1, 160*100)){
+  if(i %in% cp){
+    id = id + 1
+  }
+  id_list[i] <- id
+}
+
+Maindata_combined <- 
+  Maindata_combined %>% 
+  mutate(id = id_list)
+
+
+
+################################################################################################################################
+library(tidyverse)
+cp <- seq(1,160*100, 160)
+id_list = vector("integer")
+id = 0
+for(i in seq(1, 160*100)){
+  if(i %in% cp){
+    id = id + 1
+  }
+  id_list[i] <- id
+}
+
+Maindata_combined <- 
+  Maindata_combined %>% 
+  mutate(id = id_list)
+
+###########################################################################################
+RT2IRT2 =nullfile()
+DF6 = nullfile()
+d2<- split (Maindata_combined, rep(1:100, each=160))
+for (i in 1:100) {
+  DF6[i] <- cor(d2[[i]]$estimate,d2[[i]]$rt2) }
+RT2IRT2<- data.frame("Subjects" = 1:100, "Correlation" = DF6)
+hist(as.numeric(RT2IRT2$Correlation))
+hist(as.numeric(as.character(RT2IRT2$Correlation)),breaks =16, xlim=c(-0.2,1),col = "grey",xlab = "correlation" ,main = paste("Histogram of" , "correlation of RT2 and IRT2"))
+
+
+##########################################################################################
+
+DF7= nullfile()
+d3<- split (Maindata_combined, rep(1:100, each=160))
+for(i in 1:100)
+{DF7[i] <- cor(d3[[i]]$rt1,d3[[i]]$rt2+d3[[i]]$rt2+d3[[i]]$soa)}
+RT1RT2SOA<- data.frame("Subjects" = 1:100, "Correlation" = DF7)
+hist(as.numeric(RT1RT2SOA$Correlation))
+hist(as.numeric(as.character(RT1RT2SOA$Correlation)),breaks =16, xlim=c(0,1),col = "grey",xlab = "correlation" ,main = paste("Histogram of" , "correlation of RT1 and RT2+SOA"))
+
+#correlationDouble <- RT1RT2SOA$Correlation %>% paste() %>% as.double()
+#correlation_selection <- correlationDouble <= 0.5
+#d3_accurate <- d2[correlation_selection]
+#d3_comb <- do.call("rbind", d3_accurate)
+
+
+
+####In order to check the error rate
+
+#Newdatacombined2<-subset(d3_comb, !(d3_comb$block== "1"& d3_comb$trial<=20) )
+
+#IncorrectExcluded2 <-subset(Newdatacombined2,(Newdatacombined2$rt1_correct==Newdatacombined2$rt1_key)&
+                           #  (Newdatacombined2$rt2_correct==Newdatacombined2$rt2_key))
+
+FinalData<-
+  subset(Maindata_combined,(Maindata_combined$rt1>=150 & Maindata_combined$rt1 <=2500)&
+           (Maindata_combined$rt2>=150 & Maindata_combined$rt2 <=2500) )
+
+library(tidyverse)
+NUMRT2Correlation<-FinalData %>%
+  group_by(number)%>%summarize(MeanRT2=mean(rt2),MeanIRT2= mean(estimate))
+
+library(NUMRT2Correlation)
+ggplot(data =FinalData) + 
+  geom_line(aes(number,MeanRT2, group=1) ) + 
+  geom_line(aes(number,MeanIRT2, group=1)) + 
+  geom_point(aes(number, MeanRT2, shape="MeanRT2"),size=3)+ 
+  geom_point(aes(number,MeanIRT2, shape="MeanIRT2"), size=3) + 
+  labs(x = "Number", y = "IRT2 or RT2(ms)")+ 
+  theme_bw() + geom_smooth(method = "loess")+geom_vline(xintercept = 45, linetype="dotted", color = "blue", size=1.5)
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+
+soa_vct2 <- FinalData$soa
+soa_bin2 <- cut(soa_vct2,breaks = c(-1,125,250,375,500,625,750,875,1000),labels= c(1,2,3,4,5,6,7,8))
+num_vct2 <- FinalData$number
+
+#######r1 Accuracy and r2 Accuracy 
+rt1_correct <-FinalData$rt1_correct
+rt1_key <- FinalData$rt1_key
+rt2_correct <- FinalData$rt2_correct
+rt2_key <- FinalData$rt2_key
+rt1Accuracy <- rt1_key == rt1_correct
+for(idx in seq_along(rt1Accuracy)){
+  if(rt1Accuracy[idx]==TRUE){
+    rt1Accuracy[idx] <- 1
+  } else{
+    rt1Accuracy[idx] <- 0
+  }
+    
+}
+
+rt2Accuracy <-rt2_key == rt2_correct
+for( idx in seq_along(rt2Accuracy)){
+  if(rt2Accuracy[idx] == TRUE){
+    rt2Accuracy[idx] <- 1
+  }else{
+    rt2Accuracy[idx]<- 0 
+  }
+}
+
+
+
+
+format_vct2 <- FinalData$format
+Num_Dist2<-cut(num_vct2,breaks = c(20,33,45,57,69),labels=c("Far","Close","Close","Far"))
+SOA_Interference2 <- cut(soa_vct2,breaks = c(-1,350,1000),labels= c("Interference","No_Interference"))
+format_labeled2<-cut(format_vct2,breaks = c(0,1,2),labels= c("Digit","Word"))
+
+Num_Specifc<-cut(num_vct2,breaks = c(20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69)
+, labels = c(24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24))
+
+library(tidyverse)
+
+datasorted<-mutate(FinalData,soa_bin2,Num_Dist2,SOA_Interference2,format_labeled2, rt1Accuracy,rt2Accuracy,Num_Specifc)
+
+
+pivot_table<-datasorted %>%
+  group_by(soa_bin2,Num_Dis2t,format2,SOA_Interference)2 %>% 
+  summarize(RT1 = mean(rt1),RT2= mean(rt2),IRT2 = mean(estimate),num_trial=n())
+
+
+
+
+
+#######Making Pivot tables based on each independent variable.
+
+SOApivot_table_rt1Accuracy<- datasorted %>% group_by(soa_bin2) %>%
+  summarize(meanrt1Accuracy = mean(rt1Accuracy)) 
+
+
+SOApivot_table_rt2Accuracy<- datasorted %>% group_by(soa_bin2) %>%
+  summarize(meanrt2Accuracy = mean(rt2Accuracy)) 
+
+FORMATpivot_table_rt2Accuracy<- datasorted %>% group_by(format_labeled2)%>%
+  summarize(meanrt2Accuracy = mean(rt2Accuracy))
+
+FORMATpivot_table_rt1Accuracy<- datasorted %>% group_by(format_labeled2)%>%
+  summarize(meanrt1Accuracy = mean(rt1Accuracy))
+
+Numpivot_table_rt2Accuracy<- datasorted %>% group_by(Num_Dist2)%>%
+  summarize(meanrt2Accuracy = mean(rt2Accuracy))
+
+Numpivot_table_rt1Accuracy<- datasorted %>% group_by(Num_Dist2)%>%
+  summarize(meanrt1Accuracy = mean(rt1Accuracy))
+
+SOAInterferencepivot_table_rt2Accuracy<- datasorted %>% group_by(SOA_Interference2)%>%
+  summarize(meanrt2Accuracy = mean(rt2Accuracy))
+
+SOAInterferencepivot_table_rt1Accuracy<- datasorted %>% group_by(SOA_Interference2)%>%
+  summarize(meanrt1Accuracy = mean(rt1Accuracy))
+
+Num24pivot_table_rt1Accuracy<- datasorted %>% group_by(Num_Specifc) %>%
+  summarize(meanrt1Accuracy = mean(rt1Accuracy)) 
+
+
+Num24pivot_table_rt2Accuracy<- datasorted %>% group_by(Num_Specifc) %>%
+  summarize(meanrt2Accuracy = mean(rt2Accuracy)) 
+
+
+#### Correct Rate R1 nUM
+ggplot(data = Num24pivot_table_rt1Accuracy) + 
+  geom_line(aes(Num_Specifc, meanrt1Accuracy, group=1) ) + 
+  
+  geom_point(aes(Num_Specifc, meanrt1Accuracy),size=3)+ 
+  
+  labs(x = "NumDistance", y = " R1 Correct Rate")+theme_bw() + 
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+
+##### Correct Rate R2 nUM
+
+
+ggplot(data = Num24pivot_table_rt2Accuracy) + 
+  geom_line(aes(Num_Specifc, meanrt2Accuracy, group=1) ) + 
+  
+  geom_point(aes(Num_Specifc, meanrt2Accuracy),size=3)+ 
+  
+  labs(x = "NumDistance", y = " R2 Correct Rate")+theme_bw() + 
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################################################################################################
+
+Newdatacombined<-subset(Maindata_combined, !(Maindata_combined$block== "1"& Maindata_combined$trial<=20) )
+
+IncorrectExcluded <-subset(Newdatacombined,
+                           
+                           (Newdatacombined$rt1_correct==Newdatacombined$rt1_key)&
+                             (Newdatacombined$rt2_correct==Newdatacombined$rt2_key))
+
+FinalData<-
+  subset(IncorrectExcluded,(IncorrectExcluded$rt1>=150 & IncorrectExcluded$rt1 <=2500)&
+           (IncorrectExcluded$rt2>=150 & IncorrectExcluded$rt2 <=2500) )
+
+
+
+
+#########################################################################################################
+
+install.packages("lme4")
+library(lme4)
+object<--lmer( rt~SOA_Interference*format +(1|random.factor),data = datasorted)
+summary(object)
+
+
+
+
+
+##############################################################################################
+
+library(tidyverse)
+NUMRT2Correlation<-FinalData %>%
+  group_by(number)%>%summarize(MeanRT2=mean(rt2),MeanIRT2= mean(estimate))
+
+library(ggplot2)
+ggplot(data =NUMRT2Correlation) + 
+#geom_line(aes(number,MeanRT2, group=1) ) + 
+#geom_line(aes(number,MeanIRT2, group=1)) + 
+geom_point(aes(number, MeanRT2, shape="MeanRT2"),size=2.3)+ 
+geom_point(aes(number,MeanIRT2, shape="MeanIRT2"), size=2.3) +
+labs(x = "Number", y = "IRT2 or RT2(ms)")+ 
+ theme_bw() + 
+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+legend.title=element_blank())+
+geom_vline(xintercept=45, linetype="dashed", color = "black",size=1.2)
++geom_smooth(aes(number, MeanRT2))+geom_smooth(aes(number,MeanIRT2))+
+  annotate("text",x=45,y=500,label="45(Reference)")
+
+
+
+
+
+####################################################################################################
+soa_vct <- FinalData$soa
+soa_bin <- cut(soa_vct,breaks = c(-1,125,250,375,500,625,750,875,1000),labels= c(1,2,3,4,5,6,7,8))
+num_vct <- FinalData$number
+format_vct <- FinalData$format
+Num_Dist<-cut(num_vct,breaks = c(20,33,45,57,69),labels=c("Far","Close","Close","Far"))
+SOA_Interference <- cut(soa_vct,breaks = c(-1,350,1000),labels= c("Interference","No_Interference"))
+format_labeled <-cut(format_vct,breaks = c(0,1,2),labels= c("Digit","Word"))
+
+datasorted<-mutate(FinalData,soa_bin,Num_Dist,SOA_Interference,format_labeled)
+
+###########################################################################
+install.packages("lme4")
+library(lme4)
+
+ frt2<-lmer(rt2~SOA_Interference*format_labeled+(1|id),data = datasorted)
+anova(frt2)
+firt2<-lmer(estimate~SOA_Interference*format_labeled+(1|id),data = datasorted)
+anova(firt2)
+
+drt2<-lmer(rt2~SOA_Interference*Num_Dist+(1|id),data = datasorted)
+anova(drt2)
+dirt2<-lmer(estimate~SOA_Interference*Num_Dist+(1|id),data = datasorted)
+anova(dirt2)
+
+
+library(nlme)
+pfrt2 <- lme(rt2~SOA_Interference*format_labeled,random=~1|id,data= datasorted)
+anova(pfrt2)
+pfirt2 <- lme(estimate~SOA_Interference*format_labeled,random=~1|id,data= datasorted)
+anova(pfirt2)
+
+
+library(nlme)
+pdrt2 <- lme(rt2~SOA_Interference*Num_Dist,random=~1|id,data= datasorted)
+anova(pdrt2)
+pdirt2 <- lme(estimate~SOA_Interference*Num_Dist,random=~1|id,data= datasorted)
+anova(pdirt2)
+
+
+
+
+
+
+
+###############
+####lmer for general levels of soa interference and num distance
+
+install.packages("lme4")
+library(lme4)
+fRT1Accuracyformat<-lmer(rt1Accuracy~SOA_Interference2*format_labeled2+(1|id),data = datasorted)
+anova(fRT1Accuracyformat)
+library(nlme)
+pRT1Accuracyformat <- lme(rt1Accuracy~SOA_Interference2*format_labeled2,random=~1|id,data= datasorted)
+anova(pRT1Accuracyformat)
+###
+
+fRT2Accuracyformat<-lmer(rt2Accuracy~SOA_Interference2*format_labeled2+(1|id),data = datasorted)
+anova(fRT2Accuracyformat)
+library(nlme)
+pRT2Accuracyformat <- lme(rt2Accuracy~SOA_Interference2*format_labeled2,random=~1|id,data= datasorted)
+anova(pRT2Accuracyformat)
+
+###################
+fRT1AccuracyNum<-lmer(rt1Accuracy~SOA_Interference2*Num_Dist2+(1|id),data = datasorted)
+anova(fRT1AccuracyNum)
+
+library(nlme)
+pRT1AccuracyNum <- lme(rt1Accuracy~SOA_Interference2*Num_Dist2,random=~1|id,data= datasorted)
+anova(pRT1AccuracyNum)
+
+###############
+
+fRT2AccuracyNum<-lmer(rt2Accuracy~SOA_Interference2*Num_Dist2+(1|id),data = datasorted)
+anova(fRT2AccuracyNum)
+
+library(nlme)
+pRT2AccuracyNum<- lme(rt2Accuracy~SOA_Interference2*Num_Dist2,random=~1|id,data= datasorted)
+anova(pRT2AccuracyNum)
+
+
+
+#####################################################################################
+####lmer for specifc levels of soa and number distance
+install.packages("lme4")
+library(lme4)
+fRT1Accuracyformat<-lmer(rt1Accuracy~soa_bin2*format_labeled2+(1|id),data = datasorted)
+anova(fRT1Accuracyformat)
+library(nlme)
+pRT1Accuracyformat <- lme(rt1Accuracy~soa_bin2*format_labeled2,random=~1|id,data= datasorted)
+anova(pRT1Accuracyformat)
+###
+
+fRT2Accuracyformat<-lmer(rt2Accuracy~soa_bin2*format_labeled2+(1|id),data = datasorted)
+anova(fRT2Accuracyformat)
+library(nlme)
+pRT2Accuracyformat <- lme(rt2Accuracy~soa_bin2*format_labeled2,random=~1|id,data= datasorted)
+anova(pRT2Accuracyformat)
+
+###################
+fRT1AccuracyNum<-lmer(rt1Accuracy~soa_bin2*Num_Specifc+(1|id),data = datasorted)
+anova(fRT1AccuracyNum)
+
+library(nlme)
+pRT1AccuracyNum <- lme(rt1Accuracy~soa_bin2*Num_Specifc,random=~1|id,data= datasorted)
+anova(pRT1AccuracyNum)
+
+###############
+
+fRT2AccuracyNum<-lmer(rt2Accuracy~soa_bin2*Num_Specifc+(1|id),data = datasorted)
+anova(fRT2AccuracyNum)
+
+library(nlme)
+pRT2AccuracyNum<- lme(rt2Accuracy~soa_bin2*Num_Specifc,random=~1|id,data= datasorted)
+anova(pRT2AccuracyNum)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(nlme)
+# Attempts:
+##anova(lme(rt2 ~ SOA_Interference*format_labeled, data=datasorted, random = ~ 1 | id))  # not same as above
+##anova(lme(rt2 ~ SOA_Interference*format_labeled, data=datasorted, random = ~ 1 | id/(SOA_Interference+format_labeled)))  # gives error
+##################################################################################################
+
+pivot_table<-datasorted %>%
+  group_by(soa_bin,Num_Dist,format,SOA_Interference) %>% 
+  summarize(mean_rt1 = mean(rt1),mean_rt2= mean(rt2),mean_irt2 = mean(estimate),num_trial=n())
+
+pivot_table_soa <-datasorted %>%
+  group_by(soa_bin) %>% 
+  summarize(mean_rt1 = mean(rt1),mean_rt2= mean(rt2),mean_irt2 = mean(estimate),num_trial=n())
+
+
+ggplot(data = pivot_table_soa) + 
+  geom_line(aes(soa_bin, mean_rt1, group=1, colour="mean_rt1") ) + 
+  geom_line(aes(soa_bin, mean_rt2, group=1, colour="mean_rt2")) + 
+  geom_line(aes(soa_bin, mean_irt2, group=1, colour="mean_irt2") ) + 
+  geom_point(aes(soa_bin, mean_rt1))+ 
+  geom_point(aes(soa_bin, mean_rt2)) + 
+  geom_point(aes(soa_bin, mean_irt2))+
+  labs(x = "soa_bin", y = "RT2_RT1_IRT2(ms)")
+
+
+################################################################################################################
+
+pivot_table_Interference_Dist <- datasorted %>%
+  group_by(SOA_Interference,Num_Dist)%>%summarize(mean_rt2=mean(rt2),mean_irt2= mean(estimate),num_trial=n(), sd1=sd(rt2/sqrt(length(rt2))),sd2=sd(rt2/sqrt(length(rt2))))
+
+ggplot(data = pivot_table_Interference_Dist)+
+  geom_line(aes(SOA_Interference, mean_rt2, group=Num_Dist,colour=Num_Dist))+
+  geom_line(aes(SOA_Interference, mean_irt2, group=Num_Dist,colour=Num_Dist))+
+  geom_point(aes(SOA_Interference, mean_rt2))+
+  geom_point(aes(SOA_Interference, mean_irt2))+
+  geom_errorbar(aes(x=SOA_Interference, ymin=mean_rt2-sd1, ymax=mean_rt2+sd1),width=.002)+ 
+  geom_errorbar(aes(x=SOA_Interference,ymin=mean_irt2-sd2, ymax=mean_irt2+sd2),width=.002)+ 
+  labs(x = "SOA", y = "IRT2 or RT2(ms)")
+##################################################################################################
+
+
+
+pivot_table_Interference_Format <- datasorted %>%
+  group_by(SOA_Interference,format_labeled)%>%summarize(mean_rt2=mean(rt2),mean_irt2= mean(estimate),num_trial=n(), sd1=sd(rt2/sqrt(length(rt2))),sd2=sd(rt2/sqrt(length(rt2))))
+
+ggplot(data = pivot_table_Interference_Format)+
+  geom_line(aes(SOA_Interference, mean_rt2, group=format_labeled, linetype = "mean_rt2"))+
+  geom_line(aes(SOA_Interference, mean_irt2, group=format_labeled, linetype = "mean_irt2"))+
+  geom_point(aes(SOA_Interference, mean_rt2,  format_labeled, shape = format_labeled),size = 3)+
+  geom_point(aes(SOA_Interference, mean_irt2, format_labeled, shape = format_labeled), size = 3)+
+  geom_errorbar(aes(x=SOA_Interference, ymin=mean_rt2-sd1, ymax=mean_rt2+sd1),width=.002)+ 
+  geom_errorbar(aes(x=SOA_Interference,ymin=mean_irt2-sd2, ymax=mean_irt2+sd2),width=.002)+ 
+  labs(x = "SOA", y = "IRT2 or RT2(ms)")+labs("Format") 
+
+#####################################################################################
+pivot_table_Interference_Dist <- datasorted %>%
+  group_by(SOA_Interference,Num_Dist)%>%summarize(mean_rt2=mean(rt2),mean_irt2= mean(estimate),num_trial=n(), sd1=sd(rt2/sqrt(length(rt2))),sd2=sd(rt2/sqrt(length(rt2))))
+
+ggplot(data = pivot_table_Interference_Dist)+
+  
+  geom_line(aes(SOA_Interference, mean_rt2, group=Num_Dist,linetype="mean_rt2"))+
+  geom_line(aes(SOA_Interference, mean_irt2, group=Num_Dist,linetype="mean_irt2"))+
+  geom_point(aes(SOA_Interference, mean_rt2,shape=Num_Dist),size=3)+
+  geom_point(aes(SOA_Interference, mean_irt2,shape=Num_Dist),size=3)+
+  geom_errorbar(aes(x=SOA_Interference, ymin=mean_rt2-sd1, ymax=mean_rt2+sd1),width=.002)+ 
+  geom_errorbar(aes(x=SOA_Interference,ymin=mean_irt2-sd2, ymax=mean_irt2+sd2),width=.002)+ 
+  labs(x = "SOA", y = "IRT2 or RT2(ms)")+ theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                                                             panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+
+#######################################################################################################
+pivot_table_Interference_format <- datasorted %>%
+  group_by(SOA_Interference,format_labeled)%>%summarize(mean_rt2=mean(rt2),mean_irt2= mean(estimate),num_trial=n(), sd1=sd(rt2/sqrt(length(rt2))),sd2=sd(rt2/sqrt(length(rt2))))
+
+pivot_table_Interference_format_gathered <- 
+  pivot_table_Interference_format %>% 
+  gather(mean_rt2, mean_irt2, key="Reaction_Time_Type", value="time")
+
+
+
+ggplot(data = pivot_table_Interference_format_gathered, 
+       aes(x= SOA_Interference,y=time,group = interaction(Reaction_Time_Type,format_labeled), 
+           colour = Reaction_Time_Type, linetype = format_labeled))+
+  geom_line() + 
+  geom_point() + 
+  geom_errorbar(aes(x=SOA_Interference, ymin=time-sd1, ymax=time+sd1),width=.002) +
+  labs(x = "SOA", y = "RT or IRT (ms)")
+
+##############################################################
+summary(lmer(rt2~ SOA_Interference*format_labeled+ (1|id),data=datasorted))
+
+
+summary((rt2~SOA_Interference*format_labeled+Error(id/(SOA_Interference*format_labeled))), data = datasorted)
+
+
+##############################################################
+install.packages("readtext")
+library(readtext)
+
+getwd()
+setwd("..")
+m1 <- readtext("m1.csv")
+
+m1 <- read_tsv("m1.csv", col_names = FALSE)
+
+colnames(m1) <- c("subject", "issue", "version","value")
+
+
+dddd<-lmer(value~issue*version+(1|subject),data=m1 )
+anova(dddd)
+install.packages("lme4")
+library(lme4)
+library(nlme)
+lmm<-lme(value~issue*version+ random = ~1|subject, data=m1)
+anova(lmm)
+library(nlme)
+m1 <- lme(value~issue*version,random=~1|subject,data=m1)
+anova(m1)
+
+summary(lmer(value~version*issue + (1|subjects),data=m1))
+lmer(value ~ version*issue+ (1|subject) + (1|version:subject) + (1|issue:subject), data=m1)
+
+lmer(rt2 ~ (SOA_Interference)*(format_labeled)+ (1|id) + (1|(SOA_Interference):id) + (1|(format_labeled):id), data=datasorted)
+
+
+
+summary(aov(value ~ version*issue + Error(subject/version*issue), data=m1))
+
+
+###########################################
+set.seed(1)
+d <- data.frame(
+  Y = rnorm(48),
+  subject = factor(rep(1:12, 4)),
+  A = factor(rep(1:2, each=24)),
+  B = factor(rep(rep(1:2, each=12), 2)))
+
+summary(aov(Y ~ A*B + Error(subject/(A*B)), data=d))
+summary(lmer(Y ~ A*B + (1|subject) + (1|A:subject) + (1|B:subject), data=d))
+#####################################################################
+loadhistory(file = ".Rhistory")
+savehistory(file = ".Rhistory")
+

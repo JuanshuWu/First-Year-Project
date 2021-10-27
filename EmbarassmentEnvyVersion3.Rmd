@@ -1,0 +1,127 @@
+---
+title: "EmbarassmentEnvyVersion3"
+author: "Juanshu Wu"
+date: "4/26/2021"
+output: html_document
+---
+#Data wrangling
+```{r,warning = FALSE, message = FALSE}
+#Load data
+Dat <- read.csv("EmbarrassmentEnvyStudyVersion3.csv",TRUE)
+
+nrow(Dat_attention_check_passed  %>% filter(Gender == 2))
+
+
+library("tidyverse")
+#Delete the participants' data that fail the attention checks
+Dat_attention_check_passed <- Dat %>% filter(Attention.1 == 13 )%>% select(-Judgment.Trivial_1) %>% select(-Judgment.Trivial_2)
+
+type_gender_know <- Dat_attention_check_passed %>% select(Gender, ResponseId, starts_with(c("Body","Judgment")))
+#type_gender_know <- 
+  #type_gender_know %>% 
+ # rename(Body.Naked_1 = Body.Naked._1, Body.Naked_2 = Body.Naked._2)
+test <- type_gender_know %>% select(Gender, Body.Bowel_1, Body.Bowel_2)
+
+test %>% pivot_longer(cols=c(Body.Bowel_1, Body.Bowel_2), names_to = "doctor_type", values_to = "scores", names_prefix="Body.Bowel_")
+
+repeated_ready <- 
+type_gender_know %>% 
+  pivot_longer(cols = starts_with(c("Judgment", "Body")), 
+                 values_to = "scores", 
+                 names_to = (c("Type", "Sub", "Doctor")),
+               names_pattern = c("(.*)\\.(.*)_(.)"))
+```
+
+
+```{r,warning = FALSE, message = FALSE}
+# Doctor and Type or Embarrassment on Rating
+
+repeated_ready$Doctor <- as.factor(repeated_ready$Doctor)
+repeated_ready$Doctor <- recode_factor(repeated_ready$Doctor, "1" = "NOT Know","2" = "Know")
+
+repeated_ready%>% 
+  ggplot() +
+  aes(x = Doctor, color = Type, group = Type, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+          ggtitle("Doctor and Type of Embarassment on Rating")+
+          stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+           scale_y_continuous(limits = c(1, 7))
+
+
+ 
+```
+```{r,warning = FALSE, message = FALSE}
+# Doctor and SubTypes of Embarassment on Rating
+repeated_ready%>% 
+  ggplot() +
+  aes(x = Doctor, color = Sub, group = Sub, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+  ggtitle("Doctor and SubTypes of Embarassment on Rating")+
+  stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+   facet_wrap(.~Type)+
+   scale_y_continuous(limits = c(1, 7))
+ 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r,warning = FALSE, message = FALSE}
+repeated_ready$Gender <- recode_factor(repeated_ready$Gender, "1" = "Male","2" = "Female")
+
+repeated_ready%>% 
+  ggplot() +
+  aes(x = Type, color = Gender , group = Gender, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+          ggtitle("Doctor and Type of Embarassment on Rating")+
+          stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+           scale_y_continuous(limits = c(1, 7))
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+

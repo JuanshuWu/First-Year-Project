@@ -1,0 +1,5 @@
+"0",""
+"0","Data1<- Data_attention_check_passed %>% select(c(Questions..1C_1,Questions..1C_2,Questions..1C_3))"
+"2","Error in select(., c(Questions..1C_1, Questions..1C_2, Questions..1C_3)) : 
+  unused argument (c(Questions..1C_1, Questions..1C_2, Questions..1C_3))
+"

@@ -1,0 +1,52 @@
+---
+title: "Envy Version 3"
+author: "Juanshu Wu"
+date: "4/27/2021"
+output: html_document
+---
+#Load data and combine two collected datasets to one envy dataset/Create Envy variables.
+
+```{r,warning = FALSE, message = FALSE}
+
+library(tidyverse)
+
+#Filter out NAs
+Envy_combined_cleaned<- Envy_combined %>% filter (!is.na(General.Enjoy.Envied))%>%filter (!is.na(Envy1))
+
+#Create variable dispositional envy as the average of all the eight  dispositional envy items
+Envy_combined_cleaned <- Envy_combined_cleaned %>% mutate(Disp_envy = (Envy1+Envy2+Envy3+Envy4+Envy5+Envy6+Envy7+Envy8)/8)
+
+#Create variable Benvy as the average of all the benign envy items
+Envy_combined_cleaned<- Envy_combined_cleaned %>% mutate(Benvy = ((B1+B2+B3+B4)/4))
+
+#Create variable Menvy as the average of all the malicious envy items
+Envy_combined_cleaned <- Envy_combined_cleaned %>% mutate(Menvy = ((M1+M2+M3+M4)/4))
+
+#Create variable Scenarios.Enjoy.Envied as the average of the all the scenarios of enjoyment of being envied
+
+Envy_combined_cleaned <- Envy_combined_cleaned %>% mutate(Scenarios.Enjoy.Envied = (Personal.Achievement+Physical.Attractive+Academic.Achievement+Popularity)/4)
+
+
+```
+
+#Check and Plot  Correlation of Disp_envy(dispositional envy )and General.Enjoy.Envied("How in general do you like being envied the this person( in recalled envy event))
+
+```{r,warning = FALSE, message = FALSE}
+#Correlation Test
+cor.test(Envy_combined_cleaned$Disp_envy,Envy_combined_cleaned$General.Enjoy.Envied)
+
+
+#Plot 
+
+ggplot(Envy_combined_cleaned, aes(x= Disp_envy, y = General.Enjoy.Envied))+
+  geom_jitter()+
+  labs(y = "General.Enjoy.Envied", x = "mean Dispositional Envy")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+         geom_smooth(method = lm)+
+         ggtitle("Recall Enjoyment of Envy / Dispositional Envy")
+
+```

@@ -1,0 +1,4 @@
+"0","Dat_filtered <- Dat_attention_check_passed %>% filter( Ideology != 9 | PoliticalParty!= 9)"
+"0","Dat_filtered <- Dat_filtered %>% mutate(politicalslant = Ideology+PoliticalParty)"
+"0","Dat_filtered <- Dat_filtered %>% filter(politicalslant != 0)"
+"0","Dat_filtered$Political_Slant<-ifelse(Dat_filtered$politicalslant > 0,""right"",""left"")"

@@ -1,0 +1,6 @@
+"0",""
+"0","#log transform the duration in seconds;"
+"0",""
+"0","anova(lm(log(Duration..in.seconds.) ~ attention.1.error, data =  Dat))"
+"2","Error in eval(predvars, data, env) : object 'attention.1.error' not found
+"

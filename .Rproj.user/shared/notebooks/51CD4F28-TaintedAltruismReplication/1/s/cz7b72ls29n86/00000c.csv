@@ -1,0 +1,4 @@
+"0","D4 <- CharityCounter %>% select(C(Questions..1C.C_1+Questions..1C.C_2+Questions..1C.C_3))
+"
+"2","Error: object 'Questions..1C.C_1' not found
+"

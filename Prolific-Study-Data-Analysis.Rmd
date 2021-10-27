@@ -1,0 +1,270 @@
+---
+title: "Prolific Embarassment Envy Study"
+author: "Juanshu Wu"
+date: "5/6/2021"
+output: html_document
+---
+#Data wrangling
+```{r,warning = FALSE, message = FALSE}
+#Load data
+library(tidyverse)
+Dat <- read.csv("Prolific-500participants-Numeric.csv",TRUE)
+
+Dat_consent <- Dat %>% filter(Consent == 1)
+
+mean(Dat_consent$Age) 
+
+Dat_attention_check_passed <- Dat %>% filter(Attention1 == 1)
+nrow(Dat_attention_check_passed %>% filter( Gender == 2))
+
+library("tidyverse")
+#Delete the participants' data that fail the attention checks
+Dat_attention_check_passed <- Dat %>% filter(Attention1 == 1)
+
+type_gender_know <- Dat_attention_check_passed %>% select(Gender, Prolific.ID, starts_with(c("Body","Judgment")))
+#type_gender_know <- 
+  #type_gender_know %>% 
+ # rename(Body.Naked_1 = Body.Naked._1, Body.Naked_2 = Body.Naked._2)
+test <- type_gender_know %>% select(Gender, Body.Bowel_1, Body.Bowel_2)
+
+test %>% pivot_longer(cols=c(Body.Bowel_1, Body.Bowel_2), names_to = "doctor_type", values_to = "scores", names_prefix="Body.Bowel_")
+
+repeated_ready1 <- 
+type_gender_know %>% 
+  pivot_longer(cols = starts_with(c("Judgment", "Body")), 
+                 values_to = "scores", 
+                 names_to = (c("Type", "Sub", "Doctor")),
+               names_pattern = c("(.*)\\.(.*)_(.)"))
+```
+
+
+```{r,warning = FALSE, message = FALSE}
+# Doctor and Type or Embarrassment on Rating
+
+repeated_ready1$Doctor <- as.factor(repeated_ready1$Doctor)
+repeated_ready1$Doctor <- recode_factor(repeated_ready1$Doctor, "1" = "NOT Know","2" = "Know")
+
+repeated_ready1%>% 
+  ggplot() +
+  aes(x = Doctor, color = Type, group = Type, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line",size = 0.8)+
+  labs(y = "Embarassment Rating(1-7)")+
+  theme (aspect.ratio=3/3,plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 17,face="bold"), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black",size = 1.5))+
+          ggtitle("Doctor and Type of Embarassment on Rating")+
+          stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+           scale_y_continuous(limits = c(1, 7))+
+scale_y_continuous(limits = c(1, 7),breaks =c(1,2,3,4,5,6,7))
+ 
+```
+
+
+
+```{r,warning = FALSE, message = FALSE}
+# Gender and Type of Embarrassment on Rating
+repeated_ready1$Gender <- as.factor(repeated_ready1$Gender)
+repeated_ready1$Gender<- recode_factor(repeated_ready1$Gender, "1" = "Male","2" = "Female")
+repeated_ready1%>% 
+  ggplot()+
+  aes(x = Type, color = Gender, group = Gender, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line",size=0.8)+
+  labs(y = "Embarassment Rating(1-7)")+
+  theme(aspect.ratio=3/3,plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 17,face = "bold"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),axis.line = element_line(colour = "black",size = 1.5))+ggtitle("Gender and Type of Embarassment on Rating")+stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+scale_y_continuous(limits = c(1, 7),breaks =c(1,2,3,4,5,6,7))+scale_color_manual(values=c("Blue","Red"))
+   
+ 
+```
+
+
+
+```{r,warning = FALSE, message = FALSE}
+m1 <- lmer(data=repeated_ready_avg, score_avg~1+(1|Prolific.ID))
+
+m2 <- lmer(data=repeated_ready_avg,score_avg~Gender+(1|Prolific.ID))
+anova(m1,m2)
+m3 <- lmer(data=repeated_ready_avg, score_avg~Gender+Type
++(1|Prolific.ID))
+anova(m1,m2)
+m4<- lmer(data=repeated_ready_avg, score_avg~Gender+Type+Doctor
++(1|Prolific.ID))
+anova(m1,m2)
+m5<- lmer(data=repeated_ready_avg,score_avg~Gender+Type+Doctor+Gender:Type+(1|Prolific.ID))
+m6<- lmer(data=repeated_ready_avg,score_avg~Gender+Type+Doctor+Gender:Type+ Type:Doctor+(1|Prolific.ID))
+          
+m7 <- lmer(data=repeated_ready_avg,score_avg~Gender+Type+Doctor+Gender:Type+ Type:Doctor+ Gender:Doctor+(1|Prolific.ID))
+           
+m8 <- lmer(data=repeated_ready_avg,score_avg~Type*Doctor*Gender+(1|Prolific.ID))
+
+summary(m8)
+anova(m8)
+
+##Compare model:
+anova(m1,m2)
+anova(m2,m3)
+anova(m3,m4)
+anova(m4,m5)
+anova(m5,m6)
+anova(m6,m7)
+anova(m7,m8)
+install.packages("lmerTest")
+
+
+fixed = y ~ A, random =  A | B/C
+
+library(nlme)
+library(tidyverse)
+repeated_ready_avg <- repeated_ready1 %>% group_by(Doctor,Type,Prolific.ID,Gender)%>% summarize(score_avg = mean(scores))
+
+lmer <- lme(score_avg~Gender+Type+Doctor+Gender:Type+ Type:Doctor+ Gender:Doctor+ Type:Doctor:Gender+(1|Prolific.ID), data = repeated_ready_avg)
+anova(m1)
+repeated_ready_avg$Gender = recode_factor(repeated_ready_avg$Gender, "1" = "Male", "2" = "Female")
+repeated_ready_avg$Doctor = recode_factor(repeated_ready_avg$Doctor, "1" = "NotKnow ", "2" = "Know")
+
+
+
+
+
+
+
+
+
+
+```        
+          
+
+```
+
+
+
+
+
+
+
+
+```{r,warning = FALSE, message = FALSE}
+# Doctor and SubTypes of Embarassment on Rating
+repeated_ready1%>% 
+  ggplot() +
+  aes(x = Doctor, color = Sub, group = Sub, y = scores) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Embarassment Rating")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+  ggtitle("Doctor and SubTypes of Embarassment on Rating")+
+  stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+   facet_wrap(.~Type)+
+   scale_y_continuous(limits = c(1, 7))
+
+ 
+```
+
+
+```{r,warning = FALSE, message = FALSE}
+model1<- aov(scores ~ Gender*Type*Doctor+Error(Prolific.ID/Type*Doctor), data = repeated_ready1)
+summary(model1)
+```
+Significant interaction of Doctor type and Embarrassment type: F(**1**,**493**) = **145.78**, p <**0.01**
+ 
+Significant interaction of Gender and Embarrassment type: F(**1**,**491**) = **4.87**, p = **0.0279**
+ 
+Significant Main effect of Gender: F(**1**,**490**) = **25.11**, p < **0.01**
+ 
+ 
+ 
+Non-Significant Main effect of Doctor type: F(**1**,**490**) = **0.16**, p  = **0.69**
+ 
+Non- Significant Main effect of Embarrassment type: F(**1**,**491**) = **0.017**, p = **0.90**
+ 
+Non-Significant interaction of Gender and Doctor type: F(**1**,**491**) = **1.39**, p = **0.239**
+
+Non-Significant  three-way interaction of Gender/Doctor type/Embarrassment type: F(**1**,**491**) = **0.186**, p = **0.666**
+
+
+
+
+```{r,warning = FALSE, message = FALSE}
+
+Dat1<- Dat_attention_check_passed %>% mutate(DispEnvy = (Envy1+Envy2+Envy3+Envy4+Envy5+Envy6+Envy7+Envy8)/8)
+Dat1<- Dat1 %>% mutate(EnviedPreference=(Envied.PA.Preference+Envied.FC.Preference)/2)
+Dat1<- Dat1 %>% mutate(EnviedEnjoyment=(Envied.PA.Enjoyment+Envied.FC.Enjoyment)/2)
+
+
+```
+
+
+```{r,warning = FALSE, message = FALSE}
+
+ggplot(Dat1, aes(x= DispEnvy, y = Dat1$Envied.Enjoyment))+
+  geom_jitter()+
+  labs(y = "Envied-Enjoyment-Recall", x = "mean Dispositional Envy")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+         geom_smooth(method = lm)+
+         ggtitle("Recall Enjoyment of Envy / Dispositional Envy")
+
+cor.test(Dat1$DispEnvy,Dat1$Envied.Enjoyment)
+
+
+```
+
+**Report:** Dispositional envy significantly correlated with enjoyment of being envied in the past recalled event of being envied: r(**285**) = **0.133**, p = **0.024**
+
+
+```{r,warning = FALSE, message = FALSE}
+
+ggplot(Dat1, aes(x= DispEnvy, y = Dat1$EnviedPreference))+
+  geom_jitter()+
+  labs(y = "Envied-Preference", x = "mean Dispositional Envy")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+         geom_smooth(method = lm)+
+         ggtitle("Being Envied Preference / Dispositional Envy")
+
+cor.test(Dat1$DispEnvy,Dat1$EnviedPreference)
+
+
+```
+**Report:** Dispositional envy significantly correlated with preference for being  envied-inducing situations : r(**493**) = **0.133**, p = **0.003**
+
+
+```{r,warning = FALSE, message = FALSE}
+
+ggplot(Dat1, aes(x= DispEnvy, y = Dat1$EnviedEnjoyment))+
+  geom_jitter()+
+  labs(y = "Envied-Enjoyment", x = "mean Dispositional Envy")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+         geom_smooth(method = lm)+
+         ggtitle("Envied-Enjoyment / Dispositional Envy")
+
+
+cor.test(Dat1$DispEnvy,Dat1$EnviedEnjoyment)
+
+
+```
+**Report:** Dispositional envy significantly correlated with preference for being  envied-inducing situations : r(**493**) = **0.23**, p < **0.001**
+
+
+
+
+
+
+

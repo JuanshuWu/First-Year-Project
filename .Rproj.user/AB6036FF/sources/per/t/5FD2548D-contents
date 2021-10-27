@@ -1,0 +1,458 @@
+---
+title: "PSYC 201a Final"
+author: [Juanshu Wu]
+output:
+  html_document: 
+    toc: true
+---
+
+# Instructions
+
+This final is written in Rmarkdown*.  You will complete the final by filling in your answers and code, as appropriate in this Rmd file.  We will be giving partial credit, so please name variables appropriately and leave as many comments as needed to explain your work (however you do not need to store your answers to specific variables).  
+
+[* **Using R-markdown**](http://vulstats.ucsd.edu/notes/rmarkdown.html)
+
+Your completed exam should consist of two files – the Rmd file itself, and an html file generated from this Rmd file by "knitting" the file.   
+
+To make sure we keep track of *your* final, please
+
+(a) replace "[Your Name Here]" in the title with your name, and   
+(b) append your UCSD login name to the end of the file so the filename reads `201a-2020-final-username.Rmd` (e.g., for Ed Vul it would be: `201a-2020-final-evul.Rmd`, and the resulting html file would be: `201a-2020-final-evul.html`)
+
+**Both the Rmd and html files must be direct-messaged (via the class slack) to both instructor and TAs (Ed Vul and Wenhao Qi and Lauren Oey) by 11:59pm on Tuesday, December 15, 2020 (PST)**
+
+Late work will not be accepted.  Unlike the regular homeworks, you may not work with others or discuss your answers; all of the work should be yours and yours alone.  If we detect cheating, vengeance will be swift and thorough.
+
+## Reporting statistics
+
+1.  For all tests unless otherwise specified, assume that you are using α=0.05.
+2.	Potentially two-sided tests should be two-tailed unless otherwise specified.
+3.	All plots should be appropriately labeled.
+4.	Numbers should be rounded to 3 significant digits or the ones place (we're not sticklers here, just round sensibly).  
+5.	If you find a tiny p-value, you should report it as p < 0.001.
+6.	APA format for statistical tests (note bold means you need to fill in):
+  * Binomial tests: binomial test (exact), p = **p-value**
+  * t-tests: t(**df**) = **t-score**, p = **p-value**
+  * F-tests: F(**df1**,**df2**) = **F-score**, p = **p-value**
+  * X^2 tests: X^2 (**df**) = **X^2 -score**, p=**p-value** 
+  * Approximate X^2 tests: X^2 (simulated) = **X^2 -score**, p=**p-value** 
+  
+## Load libraries
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+load('final.Rdata')
+```
+
+# I. Analyzing data (50%)
+
+## I.1
+
+We do an experiment in which we want to test the durability of laptop owners.
+Specifically, we find 10 folks who own Apple laptops, 10 who own Dell laptops, 10 who own Lenovo laptops, and 10 with others brands.  We identify the MAC addresses of their wireless cards, and ban those from the UCSD wireless network; when they contact UCSD computing services to complain, we tell them that they need to bring their laptop in to be inspected. 
+
+Once they hand us their laptop, we give them a wireless stressball with a number on it (we say this is their claim-tag).  We secretly swap their laptop with an identical replica, and do the following three tests, in a random order, with sufficient gaps between them so that we are confident there will be no order effects (yes, realistically there would be order effects; just assume they forget all about all previous conditions).  
+
+For each of these conditions, our subjects are watching, and believe that we are manipulating their laptop.     
+
+* `baseline` – just watching us reboot the computer. 
+* We spill hot `cocoa` on the keyboard of the laptop, 
+* We `drop` the laptop from a height of 3 feet to a concrete floor, 
+* We eat chicken `wings`, and with our greasy, buffalo-sauced fingers we poke the laptop display. 
+
+In each trial, we measure how hard the subject squeezes the wireless stressball and record that value.  We assume that the `baseline` measurement just reflects overall differences in strength and stressball-squeezing propensity, so we want to measure how stressball-squeeze-force *increases* above Baseline in the different stressor conditions (cocoa/drop/wings).  In particular, we want to know if different stressors affect owners of different laptop brands differently.
+
+The data is stored in `data.1`. Here are 10 random rows:
+
+`r knitr::kable(sample_n(data.1, 10))`
+
+### I.1.a
+Wrangle the data into shape for analysis, then print the `glimpse()` output for the new data frame.
+
+####Data Glimpsing and  Cleaning
+```{r message=FALSE, warning=FALSE,results='hide'}
+glimpse(data.1)
+unique(data.1$Subject)
+unique(data.1$Brand)
+unique(data.1$Condition)
+unique(data.1$Stress)
+
+data.1$Stress = as.numeric(data.1$Stress)
+data.1$Subject = as.factor(data.1$Subject)
+data.1$Brand = as.factor(data.1$Brand)
+data.1$Condition = as.factor(data.1$Condition)
+
+# I filtered out the subjects that have Stress level Null or Smaller than 0.
+data.1.cleaned <- data.1 %>% filter(Stress >= 0) %>% filter(!is.na(Stress))
+
+```
+
+#### Check the balance  of the design
+
+```{r message=FALSE, warning=FALSE}
+# helper functions 
+all.same <- function(v) max(v) - min(v) == 0
+all.number <- function(v, n = 1) all(v == n)
+has.zero <- function(v) any(v == 0)
+
+
+# Check between-subject factor
+## Check each subject is assigned to only one level
+data.1.cleaned%>% 
+  select(Subject,Brand) %>% 
+  unique() %>% 
+  group_by(Subject,.drop = F) %>% 
+  summarise(n = n()) %>% 
+  pull(n) %>% 
+  all.number()
+
+##Check all the levels contain the same number of subjects
+data.1.cleaned %>% 
+  select(Subject, Brand) %>% 
+  unique() %>% 
+  group_by(Brand, .drop = F) %>% 
+  summarise(n = n()) %>% 
+  pull(n) %>% 
+  all.same()
+
+# Check within-subject factors
+data.1.cleaned%>% 
+  group_by(Subject, Brand,Condition, .drop = F) %>% 
+  summarise(n = n()) %>% 
+  pull(n) %>% 
+  all.same()
+
+```
+
+#### Fix the balance  of the design
+```{r message=FALSE, warning=FALSE}
+# Fix the datasets to make it balanced
+bad.subs <- data.1.cleaned %>% 
+  group_by( Subject,Condition, .drop = F) %>% 
+  summarise(n = n())%>%
+  filter(n == 0) %>% 
+  pull(Subject) %>% 
+  unique()
+
+data.1.balanced <-data.1.cleaned %>% 
+  filter(!Subject %in% bad.subs) %>% 
+  droplevels() 
+```
+
+####Data Wrangling
+
+```{r message=FALSE, warning=FALSE}
+#Compute stressball-squeeze-force *increases* above Baseline for each condition per subject
+
+
+data.1.balanced<- data.1.balanced %>% pivot_wider(names_from = Condition, values_from = Stress) %>%
+mutate(cocoa = cocoa - baseline,
+       drop = drop - baseline,
+       wings = wings - baseline)%>%
+       select(Subject, Brand, cocoa, drop, wings) %>%
+      pivot_longer(names_to = "Condition", values_to = "Stress_diff",cols =c(cocoa,drop,wings))
+
+#Glimpse the final dataset
+glimpse(data.1.balanced)
+
+```
+
+### I.1.b
+Make a graph that allows readers to assess whether the effect of brand is moderated by the stressor condition.
+
+
+
+####Graph 1 clearly checks  interaction of Brand and Condition on Stress Increases.
+
+```{r message=FALSE, warning=FALSE}
+
+data.1.balanced %>% 
+  ggplot() +
+  aes(x = Brand, color = Condition, group = Condition, y = Stress_diff) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = " Stress Increase by Baseline")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+         ggtitle("Brand Modurated by Stress Condition")
+  
+  
+  
+
+```
+
+
+#### Graph 2 show how the distribution of Stress Increase across Brand varied by Stress Condition
+```{r message=FALSE, warning=FALSE}
+
+
+ggplot(data.1.balanced,aes(y = Stress_diff , x = Brand , fill = Brand))+
+ # geom_boxplot(alpha = 0.5)+
+  geom_violin(alpha = 0.5)+
+  stat_summary(fun="mean",size = 0.3)+
+  stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.1,width = 0.5)+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 10), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+  facet_wrap(.~Condition)+
+  ggtitle("Brand Modurated by Stress Condition")+
+  labs(y = "Stress Increase by Baseline")
+
+
+```
+
+
+
+
+### I.1.c
+Run the appropriate analysis to test the effect in **I.1.b**.  Report the appropriate statistic.  
+
+
+####Answer
+**Report Statsitics: The effect of brand is not significantly moderated by the stressor condition.F(6,62) = 0.757, p = 0.606.**
+
+```{r message=FALSE, warning=FALSE}
+
+ summary(aov(Stress_diff~ Brand*Condition+Error(Subject/Condition),data.1.balanced))
+
+```
+
+## I.2
+
+
+A rather half-hearted researcher decided to study political bias (as measured by a survey like [this one](http://www.vox.com/2015/9/10/9188517/political-bias)) in pet owners.  For each pet-owner surveyed, they recorded their sex, what kind of pet they own, and their age (unfortunately, grouped by "generation", rather than recorded numerically).  Take a look at the data they gathered (in `data.2`).
+
+`r knitr::kable(sample_n(data.2, 10))`
+
+### I.2.a
+I believe that the type of pet a person owns reflects their political bias. Is there a main effect of the type of pet? Do the statistical comparisons in R and write a sentence describing the results and statistical support for the results.
+
+####Answer
+**Report Statistics : There is a significant main effect of the type pet owned on political bias.F(4,246) = 2.49, p = 0.0441.**
+
+
+```{r message=FALSE, warning=FALSE}
+
+data.2$pet <- as.factor(data.2$pet)
+data.2$sex <- as.factor(data.2$sex)
+data.2$generation <- as.factor(data.2$generation)
+
+anova(lm(political.bias ~ pet, data = data.2))
+
+```
+
+### I.2.b
+I also hypothesize that the type a pet a person owns might interact with their age (e.g., a person from the Silent generation (~80 years old) with a cat may be different from a Millennial with a cat). Is there an interaction between a person’s age and the type of pet they own? Do the statistical comparisons in R and write a sentence describing the results and statistical support for the results.
+
+####Answer
+
+**Report Statistics: There is no significant interaction between pet and generation. F(12,231) = 0.958, p = 0.490.**
+
+
+```{r message=FALSE, warning=FALSE}
+
+model1 = lm(political.bias ~ pet+generation, data = data.2)
+model2 = lm(political.bias ~pet*generation, data = data.2)
+anova(model1,model2)
+
+```
+
+
+### I.2.c
+Concisely describe which demographic factors significantly influence political bias: report appropriate statistics for any significant effects, describe any caveats that may apply to the interpretation of those statistics (are the factors completely independent?), provide graphs of the results to interpret the patterns of differences that underlie the significant effects.  Do this all in no more than 2 graphs and 2 paragraphs. **Note, this problem is meant to require a bit more thought than the previous problems and its points value will reflect that!**
+
+#### Answer
+
+**Statistical report: There is a significant main effect of generation on political bias: F(3,191) = 4.77,p = 0.003. There is a significant main effect of pet on political bias : F(4,191) = 2.48,p =0.0451. **
+
+**Caveat:Multicollinearity or dependence of categorical variables causes the following two basic types of problems: The coefficient estimates can swing wildly based on which other independent variables are in the model. The coefficients become very sensitive to small changes in the model. I decide to check whether the two  significant categorical variables ( pet and generation) are independent. I do checking by plotting the following two barplots and conduct chi-square of independence test of pet and generation. The chi-square result shows that  relation between pet and generation is not significant, X^2 (12) = 8.005, p = 0.785. For the barplots , we can see that  knowing the person's generation does not seem to  help to predict the the person's pet since there is relatively similar counts of each pet category in each generation. The same applies to pet on generation.Thus, generation an pet seems to be independent. I also do the model comparisons to see whether model adding pet or generation significantly explian more variance than the model only contain two varaibles. Both of the results show that they significant explain more variance. Adding generation : F(3,241) = 4.54, p = 0.00409 , Adding pet: F(4,241) = 2.48,p = 0.0445 **
+
+
+```{r message=FALSE, warning=FALSE}
+
+#Anova on full model
+
+anova(lm(political.bias ~sex*pet*generation, data = data.2))
+
+#chi-Square test of pet and generation
+chisq.test(data.2$pet,data.2$generation)
+
+# Barplot:Counts of generation on each pet Category
+
+ggplot(data.2) +
+  aes(x = pet, fill = generation) +
+  geom_bar() +
+  scale_fill_hue() +
+  theme_minimal()+
+  ggtitle("Counts of generation on each pet Category ")
+
+#Barplot: Counts of pet  on each generation category
+ggplot(data.2) +
+  aes(x = generation, fill = pet) +
+  geom_bar() +
+  scale_fill_hue() +
+  theme_minimal()+
+  ggtitle("Counts of pet on each generation category ")
+
+#Do model comparisons to test whether adding generation or adding pet significantly explian more variance to further verify  the independence.
+
+M1 =lm(political.bias ~ sex+pet, data = data.2)
+M2 =lm(political.bias ~sex+pet+generation, data = data.2)
+M3 =lm(political.bias ~ sex+generation, data = data.2)
+M4 = lm(political.bias ~ sex+generation+pet, data = data.2)
+anova(M1,M2)
+anova(M3,M4)
+
+
+
+
+
+
+
+```
+
+# II. Mathier question (25%)
+
+I try to predict (inflation-adjusted) wealth as a function of parents wealth, sex, and birth order (1: firstborn, 2: second, etc.):
+
+log10(wealth) ~ log10(parents.wealth) + sex + birth.order
+
+`r knitr::kable(data.3)`
+
+(these coefficients available in `data.3`)
+
+## II.1
+If I predict that the firstborn son of a wealthy family will be worth $10M in the future, what should I predict that his younger (second born) sister will be worth?
+
+
+**Prediction of secondborn's wealth equals to *$7.94M.**
+
+The model "log10(wealth) ~ log10(parents.wealth) + sex + birth.order" :log10(wealth) = B0 + B1 x log10(parents.wealth) + B2 x sex + B3 x birth.order
+The previous model can be transformed to: wealth = 10^B0 x (parents.wealth)^(B1)x 10^(B2 x sex)x 10^(B3 x birth.order)
+
+```{r message=FALSE, warning=FALSE}
+
+#Coefficient
+B0 = data.3[1,2]
+B1 = data.3[2,2]
+B2 = data.3[3,2]
+B3 = data.3[4,2]
+
+
+#model: log10(wealth) = B0 + B1*log10(parents.wealth) + B2 * sex + B3 *birth.order
+#model transformed: wealth = 10^B0 * (parents.wealth)^(B1)* 10^(B2 * sex)* 10^(B3 * birth.order)
+
+# Given the information that first born predicted wealth 10 Million
+wealth.firstborn = 10
+
+birth.order1 = 1
+birth.order2 = 2
+sex2 = 0
+sex1 = 1
+
+wealth.secondborn = ((10^(B2 *sex2))*(10^(B3 * birth.order2)))/((10^(B2 * sex1))*(10^(B3 * birth.order1)))*wealth.firstborn
+print(wealth.secondborn)
+
+
+
+```
+## II.2
+
+  `birth.order` has a negative coefficient under this model, but in a model that excludes `log10(parents.wealth)`, the `birth.order` coefficient is zero.  What might be the relationship between wealth, birth order, and parent wealth that this would be the case?
+  
+  
+###Answer: 
+
+
+**The relationship of Parent wealth and birth order is positively correlated. The relationship of Parent wealth and wealth is positively correlated. There might be no correlation of birth order and wealth.**
+
+**Reason : Since parents and birth order are positively correlated, the effect that we control for parents wealth or trying to keep parent wealth constant in multiple regression when trying to see the effect of birth order will be aossciated with shift in the coefficient of the birth order.**
+
+**In multiple regression, when you look at the effect of one variable in the model, you are holding constant all of the other predictors in the model.A regression coefficient is that it represents the mean change in the dependent variable for each 1 unit change in an independent variable when you hold all of the other independent variables constant. When independent variables are correlated, it indicates that changes in one variable are associated with shifts in another variable. The stronger the correlation, the more difficult it is to change one variable without changing another.**
+
+
+## II.3
+Consider the `log10(parents.wealth)` coefficient.  It indicates something about how society changes from generation to generation.  If you could enforce a policy that changed the value of this coefficient, what value would you pick?  And why?
+
+###Answer:
+
+**I will pick 0.5.In the model the relationship of wealth and parents.wealth is : wealth ~ parents.wealth^coefficient, if the coefficient is larger than 1, the wealthier will be even wealthier across generations lead to less and less  intergenerational social mobility. if the coefficient is 0 , there will be no relationship of parents wealth on children's wealth across generations. To be realistic, I would reduce the coefficient of the parents.wealth from 0.95 to 0.5, so across generations there will be  more rapid decrease of the influence of the first generation wealth on personal wealth and lead to more intergenerational social mobility. I will try to achieve that by enforcing a policy that provide free high-quality education for every kid in the society.**
+
+# III. Conceptual questions  (25%)
+Short answer: answer in one sentence.
+
+## III.1
+When you run a repeated measures or mixed design ANOVA, your results are a bunch of different ANOVA tables.  Why? 
+
+###Answer:
+** We are partitioning the variability into different sources and we are setting anova tests to run on each of the variability source.Each Anova table represents the result of one source of variability.**
+
+## III.2
+Suppose in an ANOVA design of scoring in dog competitions, you find that dogs with male owners score higher than dogs with female owners (i.e., a positive `male_owner` coefficient).  However, when you switch to an ANCOVA design, adding dog age as a covariate, you find that the `male_owner` coefficient becomes negative.  What could be going on to result in this pattern of results?
+
+###Answer:
+
+**The Simpson's paradox : Direction of apprent effect reverses when data are blindly aggregated disregarding latent variable.So in this case. Dog age is positively correlated with score. The fact that dogs with male owners score higer may be due to the fact that male owner prefer older dogs. If we control for the covariate of the dog age, having a male owner actually negatively affect dog score.**
+
+**The illustration of this situation that I simulated:**
+
+```{r}
+df <- tibble(
+  x = c(1,2,3,4,2,3,4,5),
+  y = c(1,2,3,4,1.5,2.5,3.5,4.5),
+  owner = as.factor(c(rep(c("female","male"),each = 4)))
+)
+
+df %>% ggplot(aes(y = y, x =x , color = owner)) +
+  geom_point()+
+  geom_line(aes(group = owner))+
+  labs(x = "Dog Age")+
+  labs(y = "Competition Score")
+
+
+```
+
+
+## III.3
+
+### III.3.a
+Give an example of real-world measurements `y` and `x` that it would make sense to analyze with the following command: `lm(y~log10(x))`. 
+
+
+*y: Happiness Level(0-100)*  
+*x: Annual Household Income($0-$10e11)*
+
+### III.3.b
+Why
+
+**The happiness level is sensitive to proportional change of household income.**
+**The household income has large positive skew, and the household income is bounded at 0.**
+**The houlsehold income covers many orders of magnitute.**
+
+### III.3.c
+What are plausible coefficients for these variables?
+
+**I want to make sure that when x acheives maximum value of 10e11 , y is not larger than 100(maximum happinessl level**
+               
+**Intercept of 25 means that if someone has 0 income, then our model predicts that the person has a happiness score of 25. Slope of 6.8 means that if the* *happiness is increased tenfolds, the happiness score will increment by 6.8. The slope is calculated so that the maximum predicted happiness value will not be more than 100 given that our annual household income is from 0- 10e11($).**
+
+
+**Intercept: 25 **  
+**Slope:6.82**  
+
+Calculation of Slope based on my thought:
+```{r}
+#y = intercept + coefficient* log10(x)
+intercept = 25
+xmax = 10^11
+ymax = 100
+plausible_coefficient =(ymax - intercept)/log10(xmax)
+print(plausible_coefficient)
+
+```
+

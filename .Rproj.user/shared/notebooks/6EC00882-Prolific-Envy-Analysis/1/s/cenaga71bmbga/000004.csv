@@ -1,0 +1,8 @@
+"0","#Load data"
+"0","library(tidyverse)"
+"0","Dat <- read.csv(""Prolific-Envy.csv"",TRUE)"
+"0","Dat1 <- Dat %>% filter(Consent == ""1"") "
+"0","STRANGE <- Dat1 %>% filter(is.na(Attention1))"
+"0","#Delete the participants' data that fail the attention checks"
+"0","Dat_attention_check_passed <- Dat1 %>% filter(Attention1 == 1)"
+"0","Dat_attention_check_failed <- Dat1 %>% filter(Attention1 != 1)"

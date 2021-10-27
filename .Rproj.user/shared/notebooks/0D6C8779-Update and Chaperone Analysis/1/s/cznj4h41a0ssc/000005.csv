@@ -1,0 +1,7 @@
+"0","ggplot(data = Dat1, stat=""count"", aes(x = BodilyEmbarrassment))+ geom_histogram()+
+facet_wrap(~Gender)+theme (plot.title = element_text(hjust = 0.5), text = element_text(family = ""serif"", size = 12), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = ""black""))+
+ggtitle("" Distribution  of embarassment score across Gender"")
+)
+"
+"2","Error: unexpected ')' in "")""
+"

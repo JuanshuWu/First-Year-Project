@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1613457288563.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2137513224",
+    "id" : "AEB48465",
+    "lastKnownWriteTime" : 1613512629,
+    "last_content_update" : 1613512630564,
+    "path" : "~/First Year Project/Analysis.R",
+    "project_path" : "Analysis.R",
+    "properties" : {
+        "cursorPosition" : "177,53",
+        "scrollLine" : "168",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

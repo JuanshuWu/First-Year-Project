@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1613464115387.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3649979691",
+    "id" : "C60CB3C7",
+    "lastKnownWriteTime" : 1607766264,
+    "last_content_update" : 1607766264,
+    "path" : "C:/RExercise/hw-201a-2020-08.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "144,10",
+        "scrollLine" : "131"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

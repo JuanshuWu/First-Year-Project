@@ -1,0 +1,113 @@
+---
+title: "Prolific-Envy-Pilot-competiveness-analysis"
+author: "Juanshu Wu"
+date: "8/4/2021"
+output: html_document
+---
+
+```{r,warning = FALSE, message = FALSE}
+#Load data
+library(tidyverse)
+Dat <- read.csv("Prolific-Envy.csv",TRUE)
+Dat1 <- Dat %>% filter(Consent == "1") 
+STRANGE <- Dat1 %>% filter(is.na(Attention1))
+#Delete the participants' data that fail the attention checks
+Dat_attention_check_passed <- Dat1 %>% filter(Attention1 == 1)
+Dat_attention_check_failed <- Dat1 %>% filter(Attention1 != 1)
+```
+
+
+```{r,warning = FALSE, message = FALSE}
+Envy_data <- Dat_attention_check_passed %>% mutate(Disp_envy = (Envy1+Envy2+Envy3+Envy4+Envy5+Envy6+Envy7+Envy8)/8) %>% mutate(InduceEnvy = (Envied.FC.Preference + Envied.PA.Preference)/2) %>% mutate(EnvyEnjoyment =(Envied.PA.Enjoyment+Envied.PA.Enjoyment)/2) 
+
+```
+
+#Check and Plot  Correlation of Disp_envy(dispositional envy )and General.Enjoy.Envied("How in general do you like being envied the this person( in recalled envy event))
+
+```{r,warning = FALSE, message = FALSE}
+#Correlation Test
+#Plot 
+
+cor.test(Envy_data$Disp_envy,Envy_data$InduceEnvy)
+
+ggplot(Envy_data, aes(x= Disp_envy, y = InduceEnvy))+
+  geom_jitter()+
+  labs(x = "Disp_Envy", y = "InduceEnvy")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12),          panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+         geom_smooth(method = lm)+
+         ggtitle("Dispositional Envy/Tendency to induce others envy")+labs(x = "Dispositional Envy", y = "Tendency to induce Envy")
+
+```
+
+
+**Report:** Dispositional envy significantly correlated with preference to be envied: r(**492**) = **0.13**, p < **0.01**
+
+
+```{r,warning = FALSE, message = FALSE}
+#Load data
+library(tidyverse)
+competitiveness_data <- read.csv("Envy_competiveness.csv",TRUE)
+competitiveness_data1 <-competitiveness_data  %>% filter(Consent == "1") 
+#Delete the participants' data that fail the attention checks
+competitiveness_data <- competitiveness_data  %>% filter(Attention.1 == 13)
+
+competitiveness_data  <- competitiveness_data %>% mutate(Benvy = ((B1+B2+B3+B4)/4)) %>% mutate(Menvy = ((M1+M2+M3+M4)/4)) %>% 
+mutate(HAS = (HAS1+HAS2+HAS3.R.+HAS7+HAS8+HAS9+HAS10.R.+HAS11+HAS12+HAS13.R.+HAS14+HAS15.R.+HAS16.R.+HAS17+HAS18.R.+HAS19.R.+HAS20.R.+HAS21+HAS22+HAS23+HAS24.R.+HAS25.R.+HAS26.R.+HAS26.R.)/26)%>%
+mutate(PDCA =(PDCA1+PDCA2.R.+PDCA3+PDCA4.Rï..+PDCA5+PDCA6.R.+PDCA7+PDCA8+PDCA9+PDCA10.R.+PDCA11+PDCA12+PDCA13+PDCA14+PDCA15)/15)
+
+cor.test(competitiveness_data$PDCA, competitiveness_data$Benvy)
+cor.test(competitiveness_data$PDCA, competitiveness_data$Menvy)
+cor.test(competitiveness_data$HAS, competitiveness_data$Benvy)
+cor.test(competitiveness_data$HAS, competitiveness_data$Menvy)
+```
+Hypercompetitive Attitude Scale
+
+
+
+Personal Development Competitive Attitude Scale
+
+
+
+
+
+#Load data
+```{r,warning = FALSE, message = FALSE}
+library(tidyverse)
+Data_political_envy<- read.csv("Freespeech.csv",TRUE)
+#Only keep participants who consent to participate
+Data_political_envy <- Data_political_envy %>% filter(Consent == "1") 
+#Delete the participants' data that fail the attention checks
+Data_political_envy<- Data_political_envy %>% filter(Attention1 == 1)
+
+
+Data_political_envy<- Data_political_envy %>% mutate(Disp_envy = (Envy1+Envy2+Envy3+Envy4+Envy5+Envy6+Envy7+Envy8)/8)
+
+#Categorize people into left and right slant
+
+Data_political_envy<- Data_political_envy %>% filter( Ideology != 9 | PoliticalParty!= 9)
+Data_political_envy <- Data_political_envy %>% mutate(politicalslant = Ideology+PoliticalParty)%>% mutate(InduceEnvy = (Envied.FC.Preference + Envied.PA.Preference)/2) %>% mutate(EnvyEnjoyment = (Envied.PA.Enjoyment+Envied.PA.Enjoyment)/2) 
+
+Data_political_envy<- Data_political_envy%>% filter(politicalslant != 0)
+Data_political_envy$Political_Slant<-ifelse(Data_political_envy$politicalslant > 0,"right","left") 
+
+#political slant() and dispositional envy
+cor.test(Data_political_envy$politicalslant,Data_political_envy$Disp_envy)
+cor.test(Data_political_envy$politicalslant,Data_political_envy$InduceEnvy)
+cor.test(Data_political_envy$politicalslant,Data_political_envy$EnvyEnjoyment)
+
+
+
+
+
+
+
+
+```
+
+
+
+
+

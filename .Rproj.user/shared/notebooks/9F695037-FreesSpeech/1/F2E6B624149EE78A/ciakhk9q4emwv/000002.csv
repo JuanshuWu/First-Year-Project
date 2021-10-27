@@ -1,0 +1,8 @@
+"0",""
+"0","  "
+"0","# stacked"
+"0","ggplot(Dat_filtered, aes(Political_Slant, fill=X2.FacultyAllow)) + "
+"0","  geom_bar(position=""fill"")+"
+"0","  geom_text(aes(label=after_stat('count')),stat='count',position='fill')+"
+"0","  theme(plot.title = element_text(hjust = 0.5),text = element_text(family = ""serif"",size = 12),panel.grid.major = element_blank(), panel.grid.minor =element_blank(),panel.background = element_blank(), axis.line = element_line(colour = ""black""))+"
+"0","ggtitle(""(2)Allow faculty member in University to express this belief publicly?"")+labs(y = ""Proportion"", x = ""Political Slant"",fill = ""Answer choice"")"

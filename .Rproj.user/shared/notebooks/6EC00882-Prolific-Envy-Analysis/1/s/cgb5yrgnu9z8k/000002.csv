@@ -1,0 +1,2 @@
+"0","Envy_data <- Dat_attention_check_passed %>% mutate(Disp_envy = (Envy1+Envy2+Envy3+Envy4+Envy5+Envy6+Envy7+Envy8)/8) %>% mutate(InduceEnvy = (Envied.FC.Preference + Envied.PA.Preference)/2) %>% mutate(EnvyEnjoyment =(Envied.PA.Enjoyment+Envied.PA.Enjoyment)/2) "
+"0",""

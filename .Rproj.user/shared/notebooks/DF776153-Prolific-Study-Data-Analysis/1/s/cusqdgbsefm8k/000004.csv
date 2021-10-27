@@ -1,0 +1,7 @@
+"0",""
+"0","repeated_ready1 <- "
+"0","type_gender_know %>% "
+"0","  pivot_longer(cols = starts_with(c(""Judgment"", ""Body"")), "
+"0","                 values_to = ""scores"", "
+"0","                 names_to = (c(""Type"", ""Sub"", ""Doctor"")),"
+"0","               names_pattern = c(""(.*)\\.(.*)_(.)""))"

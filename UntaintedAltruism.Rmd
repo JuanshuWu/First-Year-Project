@@ -1,0 +1,184 @@
+---
+title: "UntaintedAltruismAnalysis"
+author: "Juanshu Wu"
+date: "5/28/2021"
+output: html_document
+---
+## Load data and delete data who failed to consent or failed the attention check
+```{r,warning = FALSE, message = FALSE}
+#Load data
+library(tidyverse)
+Dat <- read.csv("UntaintedAltruisticNumeric.csv",TRUE)
+#Only keep participants who consent to participate
+Dat1 <- Dat %>% filter(Consent == "1") 
+
+#Delete the participants' data that fail the attention checks
+Dat_attention_check_passed <- Dat1 %>% filter(Attention1 == 1)
+```
+## Create the two independent variables
+```{r,warning = FALSE, message = FALSE}
+
+# Create IV1 (Advertising/Charity)
+
+Dat_attention_check_passed$IV1 = recode_factor(Dat_attention_check_passed$Random1,"Charity " = "Charity ", "Advertising" = "Advertising","Advertising+Counterfactual" = "Advertising", "Charity+Counterfactual" = "Charity")
+
+#Create IV2(Counterfactual/Non_counterfactual)
+
+Dat_attention_check_passed$IV2 = recode_factor(Dat_attention_check_passed$Random1,
+"Charity"= "Non-counterfactual", "Advertising" = "Non-counterfactual","Advertising+Counterfactual" = "Counterfactual", "Charity+Counterfactual" = "Counterfactual")
+
+```
+
+## Create DV-composite score(average of  questions 1-4 not including 5) for each participant
+```{r,warning = FALSE, message = FALSE}
+#transfer the character into numeric answers
+selected<-Dat_attention_check_passed%>% select(starts_with("Questions.."))
+not_selected <-Dat_attention_check_passed %>% select(!starts_with("Questions.."))
+selected <- 
+selected %>% lapply(as.numeric)
+D<- cbind(selected, not_selected)
+#Split the whole sample into sample of each condition
+Charity_sample <- D%>% filter(Random1 == "Charity")
+Advertising_sample <- D %>% filter(Random1 =="Advertising")
+Advertising_Counter <- D %>% filter(Random1 =="Advertising+Counterfactual")
+CharityCounter <- D%>% filter(Random1 == "Charity+Counterfactual")
+# calculate and mutate the composite score to each sample
+Charity_sample<- Charity_sample %>% mutate(Composite_Score = (Questions..1C_1+Questions..1C_2+Questions..1C_3)/3)
+Advertising_sample <- Advertising_sample %>% mutate(Composite_Score = (Questions..1A_1+Questions..1A_2+Questions..1A_3)/3) 
+Advertising_Counter <- Advertising_Counter %>% mutate(Composite_Score = (Questions..1A.C_1+Questions..1A.C_2+Questions..1A.C_3)/3)
+CharityCounter <- CharityCounter %>% mutate(Composite_Score = (Questions..1C.C_1+Questions..1C.C_2+Questions..1C.C_3)/3)
+#combine the subsamples to get the final dataset
+Data_final<- rbind(Charity_sample,
+Advertising_sample,
+Advertising_Counter,
+CharityCounter)
+ 
+```
+
+## Plot to show  IV1/IV2 on DV
+Note we should change IV1, IV2 and DV to more informative variable names later.
+
+```{r,warning = FALSE, message = FALSE}
+
+Data_final%>% 
+  ggplot() +
+  aes(x = IV1, color = IV2, group = IV2, y = Composite_Score) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Composite_Score")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+          ggtitle("IV1 and IV2 on DV")+
+          stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+           scale_y_continuous(limits = c(1, 7))
+ 
+
+Data_final%>% 
+  ggplot() +
+  aes(x = IV2, color = IV1, group = IV1, y = Composite_Score) +
+  stat_summary(fun.y = mean, geom = "point") +
+  stat_summary(fun.y = mean, geom = "line")+
+  labs(y = "Composite_Score")+
+  theme (plot.title = element_text(hjust = 0.5), text = element_text(family = "serif", size = 12), 
+         panel.grid.major = element_blank(), 
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         axis.line = element_line(colour = "black"))+
+          ggtitle("IV1 and IV2 on DV")+
+          stat_summary(fun.data = "mean_se",geom = "errorbar", size = 0.05,width = 0.2)+
+           scale_y_continuous(limits = c(1, 7))
+
+## Mean SD for each Condition(after attention check)
+Data_final%>%filter(Random1 == "Charity") %>% pull(Composite_Score)%>% mean()
+Data_final%>%filter(Random1 == "Charity") %>% pull(Composite_Score)%>% sd()
+
+Data_final%>%filter(Random1 == "Advertising")%>% pull(Composite_Score)%>% mean()
+Data_final%>%filter(Random1 == "Advertising")%>% pull(Composite_Score)%>% sd()
+
+Data_final%>%filter(Random1== "Advertising+Counterfactual")%>% pull(Composite_Score)%>% mean()
+Data_final%>%filter(Random1== "Advertising+Counterfactual")%>% pull(Composite_Score)%>% sd()
+
+Data_final%>%filter(Random1 =="Charity+Counterfactual")%>% pull(Composite_Score)%>% mean()
+Data_final%>%filter(Random1 =="Charity+Counterfactual")%>% pull(Composite_Score)%>% sd()
+
+
+```
+**Charity_NonConterfactual: Mean = 4.9,SD = 2 **
+
+**Advertising_NonConterfactual: Mean = 6.3,SD = 1.4 **
+
+**Advertising_Conterfactual: Mean = 5,SD = 1.5 **
+
+**Charity_Conterfactual: Mean = 6.24,SD = 1.8 **
+
+#Welch Two Sample t-test
+```{r,warning = FALSE, message = FALSE}
+#combine the subsamples to final datasets for t-test
+
+Data_nocounter<- rbind(Charity_sample,
+Advertising_sample
+)
+
+Data_counter<- rbind(
+Advertising_Counter,
+CharityCounter)
+
+
+m1<-t.test(Composite_Score ~ Random1 , data=Data_nocounter, var.equal=FALSE, na.rm=TRUE)
+
+
+m2<-t.test(Composite_Score ~ Random1 , data=Data_counter, var.equal=FALSE, na.rm=TRUE)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Data Analysis on unbalanced design： Type III anova test
+
+An unbalanced design has unequal numbers of subjects in each group.
+There are three fundamentally different ways to run an ANOVA in an unbalanced design. They are known as Type-I, Type-II and Type-III sums of squares. All of the three should have the same result if the design is balanced, but they yield different result if the design is unbalaned.To keep things simple, note that The recommended method are the Type-III sums of squares.For Type-III, when interaction is presented, the main effect result should be interpreted with caution.
+
+Some useful resources regarding how to deal with unbalanced design:
+
+http://www.sthda.com/english/wiki/two-way-anova-test-in-r
+
+http://sites.psu.edu/stat461psbsp2013/wp-content/uploads/sites/1906/2013/03/InteractionsAndTypesOfSS.pdf
+
+https://www.r-bloggers.com/2011/03/anova-%e2%80%93-type-iiiiii-ss-explained/#:~:text=In%20general%2C%20if%20there%20is%20no%20significant%20interaction,presence%20of%20interactions%2C%20main%20effects%20are%20rarely%20interpretable%29.
+
+```{r,warning = FALSE, message = FALSE}
+library(car)
+# The following two approaches of Type III yields the same result
+model <- aov(Composite_Score ~ IV1*IV2, data = Data_final)
+Anova(lm(Composite_Score~ IV1*IV2, data=Data_final, contrasts=list(topic=contr.sum, sys=contr.sum)),type=3)
+```
+**Report: There is significant interaction of IV1 and IV2 on DV: F(1,490) = 63.12, p < 0.001 . Note that we cannot conclude there is  main effect (even though here is significant) for type three anova if the interaction is significant**
+
+
+
+
+
+
+
+
+
+
+

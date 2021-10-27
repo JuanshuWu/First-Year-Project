@@ -1,0 +1,154 @@
+#' # 201a Homework 8: Repeated measures
+#' ## INSTRUCTIONS
+#' 1) Download the skeleton script `r link.skeleton()`.
+#' 2) Save the below file(s) in the same directory as your R script  
+#' * `r link.datafile('hw-201a-2020-08.RData')`
+#' * `r link.datafile('TeacherRatings_cam.csv')`
+#' * `r link.datafile('TeacherRatings_dave.csv')`
+#' * `r link.datafile('TeacherRatings_elsa.csv')`
+#' * `r link.datafile('TeacherRatings_sarah.csv')`
+#' 3) Edit the script to store the appropriate values into the appropriate variables (as detailed below)
+#'   
+
+# note: if loading other packages gives you a submission error, try wrapping 
+# in the suppressMessages() function as below:
+suppressMessages(library(tidyverse))
+load('hw-201a-2020-08.RData')
+
+#' # Problem 1 
+#' In the linked TeacherRatings csv files, several different teachers are scored for how well they taught PSYC130 and PSYC178 during the fall and winter. The teachers are either Professors (Prof) or Adjuncts. 
+#' ## 1a
+#' How many "cells" are there in this design?
+
+cam<- read.csv('TeacherRatings_cam.csv')
+dave<- read.csv('TeacherRatings_dave.csv')
+elsa<- read.csv('TeacherRatings_elsa.csv')
+sarah<- read.csv('TeacherRatings_sarah.csv')
+
+TeacherRatings=bind_rows(cam,dave,elsa,sarah)
+
+TeacherRatings$Teacher = as.factor(TeacherRatings$Teacher)
+TeacherRatings$Rank = as.factor(TeacherRatings$Rank)
+TeacherRatings$Class = as.factor(TeacherRatings$Class)
+TeacherRatings$Season = as.factor(TeacherRatings$Season)
+teacherLevel<- TeacherRatings%>%pull(Teacher)%>% nlevels()
+rankLevel<- TeacherRatings%>%pull(Rank)%>% nlevels()
+classLevel<- TeacherRatings%>%pull(Class)%>% nlevels()
+seasonLevel <- TeacherRatings%>%pull(Season)%>% nlevels()
+
+
+ans.1a = rankLevel*classLevel*seasonLevel
+
+#' ## 1b
+#' What was the highest **individual** Fall score earned by the Teacher with the lowest **mean** Winter score? 
+TeacherWinterScore_lowest<- TeacherRatings %>%group_by(Teacher)%>%filter(Season=="Winter") %>% summarise (mean_winter_teacher_score = mean(Score))%>%
+filter(mean_winter_teacher_score == min(mean_winter_teacher_score))%>%pull(Teacher)
+
+HighestScore<- TeacherRatings %>% filter(Teacher == TeacherWinterScore_lowest)%>%filter(Season == "Fall") %>% arrange(desc(Score)) %>% pull(Score)%>%
+  .[[1]]
+                                                                                                         
+ans.1b = HighestScore
+
+#' ## 1c
+#' I want to test whether the harsh San Diegan winters affect teachers' performance. Using the full model, is there a main effect of Season? Store the F-statistic in `ans.1c`.
+
+model1<- aov(Score ~ Rank*Class*Season+Error(Teacher/(Season*Class)), data = TeacherRatings)
+summary(model1)[[2]][[1]][1,4]
+
+
+
+ans.1c = summary(model1)[[2]][[1]][1,4]
+
+#' ## 1d 
+#' Is there an interaction between the Class taught and the Season it is taught in? Store the p-value in `ans.1d`.	
+
+ans.1d = summary(model1)[[4]][[1]][1,5]
+
+#' # Problem 2
+#' Fishy2: Return of the Fish.
+#' A group of marine biologists/underwater decorators/at-home aquarium owners decided to see how their fish reacted to different surroundings. They conducted the experiment represented in `fishy2` (don't ask them about `fishy1`) with wild abandon. Owing in part to their over-enthusiasm and in part to the naturally fragile constitution of many fish, the... erm... attrition rate was rather high. 
+#' Also, the scientists neglected to write down much of their procedure. Here's what they remember: 
+#' * They measured movement for each fish in each tank by counting the number of times they changed direction over a 180-second period. They measured each fish in a number of tanks and with a number of different tank furnishings. 
+#' Help the scientists remember their experiment and analyze their data. 
+#' ## 2a 
+#' Get the data in shape for repeated measures ANOVA. Report the sum of the (potentially modified) `movement` column in `ans.2a`.
+fishy2
+#sex between factor
+#fish.sepcies between factor
+#tank.color?
+#furniture ?
+all.same <- function(v) max(v) - min(v) == 0
+all.number <- function(v, n = 1) all(v == n)
+has.zero <- function(v) any(v == 0)
+
+
+library(tidyverse)
+fishy2 %>% 
+  group_by(subject,tank.color, furniture, .drop = F) %>% 
+  summarise(n = n()) %>% 
+  pull(n) %>% 
+  has.zero()
+
+
+
+bad.subs <- fishy2 %>% 
+  group_by(subject,tank.color, furniture, .drop = F) %>% 
+  summarise(n = n()) %>% 
+  filter(n == 0) %>% 
+  pull(subject) %>% 
+  unique()
+
+fishy2 %>% 
+  filter(!subject %in% bad.subs) %>% 
+  droplevels() %>% 
+  group_by(subject,tank.color, furniture, .drop = F) %>% 
+  summarise(n = n()) %>% 
+  pull(n) %>% 
+  has.zero()
+
+fishy2.clean <- fishy2 %>% 
+  filter(!subject %in% bad.subs) %>% 
+  droplevels() %>% 
+  group_by(subject,tank.color, furniture,sex,fish.species ,.drop = F) %>% 
+  summarise(movement = mean(movement))%>% filter(!is.na(movement))
+
+fishy2.clean <- fishy2 %>% 
+  filter(!subject %in% bad.subs) %>% 
+  droplevels() %>% 
+  group_by(subject,tank.color, furniture,sex,fish.species ,.drop = F) %>% 
+  summarise(movement = mean(movement))%>% filter(!is.na(movement))
+
+#alternative way
+fishy2.clean <- fishy2 %>% 
+  filter(!subject %in% bad.subs) %>% 
+  droplevels() %>% 
+  group_by(subject,tank.color, furniture,.drop = F) %>% 
+  summarise(movement = mean(movement),sex = first(sex), fish.species= first(fish.species))%>% filter(!is.na(movement))
+
+
+
+fishy2.clean
+ans.2a = sum(fishy2.clean$movement)
+
+#' ## 2b 
+#' Does the difference in movement between male and female fish depend on the species? Save the F-statistic for this test in `ans.2b`.
+
+sum_model<- summary(aov(movement ~ sex*fish.species+Error(subject), fishy2.clean))
+sum_model
+sum_model[[1]][[1]][3,4]
+ans.2b = sum_model[[1]][[1]][3,4]
+
+#' ## 2c 
+#' Is the difference from 2b modulated by furniture? Save the p-value in `ans.2c`.
+
+sum_model1<- summary(aov(movement ~ sex*fish.species*furniture*tank.color+Error(subject/furniture*tank.color), fishy2.clean))
+sum_model1
+sum_model1[[3]][[1]][4,5]
+
+ans.2c = sum_model1[[3]][[1]][4,5]
+
+#' ## 2d
+#' What is the largest F value among these results? Save it in `ans.2d`.
+
+ans.2d =  sum_model1[[3]][[1]][1,4]
+
